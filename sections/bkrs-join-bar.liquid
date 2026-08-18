@@ -1,0 +1,138 @@
+{%- comment -%}
+  THE BAKERY — slim join bar for bkrsclb.com.
+
+  A SECTION, not a snippet, and it belongs inside sections/header-group.json
+  rather than after the header in layout/theme.liquid. The theme's inline
+  setHeaderHeighCustomProperties() script measures the children of
+  #header-group to set --header-height / --header-group-height; anything
+  dropped outside that div is invisible to the calculation and leaves the
+  sticky-header offset short by the height of this bar.
+
+  Closable with an X. Once dismissed it stays gone for N whole visits — not
+  N days — so somebody who opens the store twice in an afternoon is asked
+  once. localStorage is per-origin, so this store keeps its own count.
+
+  The buttons leave for razfresco.com — the subscription product lives on
+  that store, not this one — so the permalinks are absolute, not relative.
+{%- endcomment -%}
+
+{{ 'bkrs-subscribe.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign vid   = section.settings.variant_id | strip
+  assign p_mo  = section.settings.plan_monthly | strip
+  assign p_yr  = section.settings.plan_annual | strip
+  comment
+    Strip ONE trailing slash, and only if it is really there. `remove_last:
+    '/'` looks like it does this and does not: with no trailing slash it
+    eats the last slash it can find, which is the second one in "https://",
+    producing https:/razfresco.com. Chrome quietly repairs that; not every
+    client does. Caught in the rendered HTML on the preview theme.
+  endcomment
+  assign base = section.settings.store_url | strip
+  assign tail = base | slice: -1
+  if tail == '/'
+    assign cut = base.size | minus: 1
+    assign base = base | slice: 0, cut
+  endif
+
+  assign show = true
+  if section.settings.enabled == false
+    assign show = false
+  endif
+  if vid == blank or p_mo == blank or p_yr == blank
+    assign show = false
+  endif
+  if request.design_mode
+    assign show = false
+  endif
+  if request.path contains '/cart'
+    assign show = false
+  endif
+
+  assign url_mo = base | append: '/cart/add?id=' | append: vid | append: '&quantity=1&selling_plan=' | append: p_mo | append: '&return_to=/checkout&ref=bkrsclb-bar'
+  assign url_yr = base | append: '/cart/add?id=' | append: vid | append: '&quantity=1&selling_plan=' | append: p_yr | append: '&return_to=/checkout&ref=bkrsclb-bar'
+-%}
+
+{%- if show -%}
+<div class="bkrs-bar" data-bkrs-bar hidden>
+  <span class="bkrs-bar__t">{{ section.settings.text }}</span>
+  <span class="bkrs-jbtns">
+    {%- if section.settings.free_url != blank -%}
+      <a class="bkrs-jbtn bkrs-jbtn--free bkrs-jbtn--compact" href="{{ section.settings.free_url }}" target="_blank" rel="noopener">{{ section.settings.label_free }}</a>
+    {%- endif -%}
+    <a class="bkrs-jbtn bkrs-jbtn--month bkrs-jbtn--compact" href="{{ url_mo }}">{{ section.settings.label_monthly }}</a>
+    <a class="bkrs-jbtn bkrs-jbtn--year bkrs-jbtn--compact" href="{{ url_yr }}">{{ section.settings.label_annual }}{% if section.settings.badge != blank %} <span class="bkrs-badge">{{ section.settings.badge }}</span>{% endif %}</a>
+  </span>
+  <button class="bkrs-bar__x" type="button" data-bkrs-bar-close aria-label="Dismiss">&#10005;</button>
+</div>
+
+<script>
+(function () {
+  var CKEY  = 'bkrs_visits';
+  var SKEY  = 'bkrs_visit_counted';
+  var DKEY  = 'bkrs_bar_dismissed_at';
+  var EVERY = {{ section.settings.every | default: 3 }};
+
+  var bar = document.querySelector('[data-bkrs-bar]');
+  if (!bar) return;
+
+  /* Wrapped: Safari private mode throws on storage access rather than
+     returning null. */
+  function ls(k, v) {
+    try {
+      if (v === undefined) return localStorage.getItem(k);
+      localStorage.setItem(k, v);
+    } catch (e) { return null; }
+  }
+
+  /* Count this visit exactly once. sessionStorage clears with the tab,
+     which is the closest a browser gets to "a visit". */
+  var n = parseInt(ls(CKEY) || '0', 10) || 0;
+  try {
+    if (!sessionStorage.getItem(SKEY)) {
+      n += 1;
+      ls(CKEY, String(n));
+      sessionStorage.setItem(SKEY, '1');
+    }
+  } catch (e) { n = n || 1; }
+
+  var dismissedAt = parseInt(ls(DKEY) || '0', 10) || 0;
+  if (dismissedAt && n < dismissedAt + EVERY) return;
+
+  bar.hidden = false;
+
+  bar.querySelector('[data-bkrs-bar-close]').addEventListener('click', function () {
+    ls(DKEY, String(n));
+    bar.hidden = true;
+  });
+
+  /* Heading to checkout counts too — do not nag on the way to paying. */
+  Array.prototype.forEach.call(bar.querySelectorAll('.bkrs-jbtn'), function (b) {
+    b.addEventListener('click', function () { ls(DKEY, String(n)); });
+  });
+})();
+</script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "THE BAKERY bar",
+  "settings": [
+    { "type": "checkbox", "id": "enabled", "label": "Show the bar", "default": true },
+    { "type": "text", "id": "text", "label": "Message", "default": "THE BAKERY — unreleased tracks, first. A dollar a month." },
+    { "type": "text", "id": "label_free", "label": "Free button", "default": "Listen free" },
+    { "type": "text", "id": "free_url", "label": "Free button link", "default": "https://streaming.bkrsclb.com", "info": "Green, shown first, opens in a new tab. Clear this field to remove the button." },
+    { "type": "text", "id": "label_monthly", "label": "Monthly button", "default": "$1.00 / month" },
+    { "type": "text", "id": "label_annual", "label": "Annual button", "default": "$9.99 / year" },
+    { "type": "text", "id": "badge", "label": "Badge on the annual button", "default": "2 months free" },
+    { "type": "range", "id": "every", "label": "Hide for this many visits", "min": 1, "max": 10, "step": 1, "default": 3 },
+    { "type": "header", "content": "Checkout" },
+    { "type": "text", "id": "store_url", "label": "Store the plan lives on", "default": "https://razfresco.com" },
+    { "type": "text", "id": "variant_id", "label": "Variant ID", "default": "47737797705877" },
+    { "type": "text", "id": "plan_monthly", "label": "Monthly selling plan ID", "default": "3250192533" },
+    { "type": "text", "id": "plan_annual", "label": "Annual selling plan ID", "default": "3250159765" }
+  ],
+  "presets": [{ "name": "THE BAKERY bar" }]
+}
+{% endschema %}

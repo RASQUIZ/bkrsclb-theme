@@ -1,0 +1,92 @@
+{%- comment -%}
+  THE BAKERY — full-width join band for the bkrsclb.com home page.
+
+  Placement, per Raz (18 Aug): the very bottom of the home page, directly
+  above the footer. Nothing between the product lists — the catalogue reads
+  as one uninterrupted run, and the offer closes the page rather than
+  cutting it in half.
+
+  Same absolute razfresco.com permalinks as the bar — the subscription
+  product lives on that store, not this one.
+{%- endcomment -%}
+
+{{ 'bkrs-subscribe.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign vid  = section.settings.variant_id | strip
+  assign p_mo = section.settings.plan_monthly | strip
+  assign p_yr = section.settings.plan_annual | strip
+  comment
+    See the note in bkrs-join-bar.liquid: `remove_last: '/'` eats the second
+    slash of "https://" when there is no trailing slash to remove.
+  endcomment
+  assign base = section.settings.store_url | strip
+  assign tail = base | slice: -1
+  if tail == '/'
+    assign cut = base.size | minus: 1
+    assign base = base | slice: 0, cut
+  endif
+
+  assign show = true
+  if vid == blank or p_mo == blank or p_yr == blank
+    assign show = false
+  endif
+
+  assign url_mo = base | append: '/cart/add?id=' | append: vid | append: '&quantity=1&selling_plan=' | append: p_mo | append: '&return_to=/checkout&ref=bkrsclb-band'
+  assign url_yr = base | append: '/cart/add?id=' | append: vid | append: '&quantity=1&selling_plan=' | append: p_yr | append: '&return_to=/checkout&ref=bkrsclb-band'
+-%}
+
+{%- if show -%}
+<div class="bkrs-band">
+  <div class="bkrs-band__in">
+    <div class="bkrs-band__l">
+      {%- if section.settings.kicker != blank -%}
+        <p class="bkrs-band__k">{{ section.settings.kicker }}</p>
+      {%- endif -%}
+      <h2 class="bkrs-band__h">{{ section.settings.heading }}</h2>
+      {%- if section.settings.sub != blank -%}
+        <p class="bkrs-band__sub">{{ section.settings.sub }}</p>
+      {%- endif -%}
+      {%- if section.settings.hook != blank -%}
+        <p class="bkrs-band__hook">{{ section.settings.hook }}</p>
+      {%- endif -%}
+    </div>
+    <div class="bkrs-band__r">
+      <span class="bkrs-jbtns">
+        {%- if section.settings.free_url != blank -%}
+          <a class="bkrs-jbtn bkrs-jbtn--free" href="{{ section.settings.free_url }}" target="_blank" rel="noopener">{{ section.settings.label_free }}</a>
+        {%- endif -%}
+        <a class="bkrs-jbtn bkrs-jbtn--month" href="{{ url_mo }}">{{ section.settings.label_monthly }}</a>
+        <a class="bkrs-jbtn bkrs-jbtn--year" href="{{ url_yr }}">{{ section.settings.label_annual }}{% if section.settings.badge != blank %} <span class="bkrs-badge">{{ section.settings.badge }}</span>{% endif %}</a>
+      </span>
+      {%- if section.settings.fine != blank -%}
+        <p class="bkrs-band__fine">{{ section.settings.fine }}</p>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "THE BAKERY band",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "Kicker", "default": "The Bakery · members only" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "A dollar gets you in" },
+    { "type": "text", "id": "sub", "label": "Subheading", "default": "Unreleased tracks, series and drops — before anywhere else." },
+    { "type": "text", "id": "hook", "label": "Hook", "default": "$1 gets you in. $9.99 keeps you in for a year." },
+    { "type": "text", "id": "fine", "label": "Fine print", "default": "$1.00 × 12 = $12.00. A year is $9.99. Cancel anytime." },
+    { "type": "text", "id": "label_free", "label": "Free button", "default": "Listen free" },
+    { "type": "text", "id": "free_url", "label": "Free button link", "default": "https://streaming.bkrsclb.com", "info": "Green, shown first, opens in a new tab. Clear this field to remove the button." },
+    { "type": "text", "id": "label_monthly", "label": "Monthly button", "default": "$1.00 / month" },
+    { "type": "text", "id": "label_annual", "label": "Annual button", "default": "$9.99 / year" },
+    { "type": "text", "id": "badge", "label": "Badge on the annual button", "default": "2 months free" },
+    { "type": "header", "content": "Checkout" },
+    { "type": "text", "id": "store_url", "label": "Store the plan lives on", "default": "https://razfresco.com" },
+    { "type": "text", "id": "variant_id", "label": "Variant ID", "default": "47737797705877" },
+    { "type": "text", "id": "plan_monthly", "label": "Monthly selling plan ID", "default": "3250192533" },
+    { "type": "text", "id": "plan_annual", "label": "Annual selling plan ID", "default": "3250159765" }
+  ],
+  "presets": [{ "name": "THE BAKERY band" }]
+}
+{% endschema %}

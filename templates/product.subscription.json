@@ -242,9 +242,9 @@
                 "widget_style": "card",
                 "widget_style_card_selector": "radio_button",
                 "subscription_policy_url": "",
-                "color_text_body": "#6D7175",
-                "dividers_color": "#8F8D8D",
-                "background_color": "#FFFFFF",
+                "color_text_body": "#6d7175",
+                "dividers_color": "#8f8d8d",
+                "background_color": "#ffffff",
                 "border_thickness": 1,
                 "border_radius": 0,
                 "product": "{{closest.product}}"
@@ -345,90 +345,10 @@
                   "block_order": [
                     "text_n6TMzy"
                   ]
-                },
-                "accordion_row_XMFatY": {
-                  "type": "_accordion-row",
-                  "settings": {
-                    "heading": "Care & Maintenance",
-                    "open_by_default": false,
-                    "icon": "none",
-                    "width": 20
-                  },
-                  "blocks": {
-                    "text_wbGpVU": {
-                      "type": "text",
-                      "settings": {
-                        "text": "<p>To maintain the beauty and integrity of your purchase, we recommend treating it with care. Simple maintenance practices, such as gentle washing and proper storage, can effectively preserve the longevity of your favorites. We encourage you to refer to the care instructions included with each item, designed to help you keep your purchase in top condition.</p>",
-                        "width": "100%",
-                        "max_width": "normal",
-                        "alignment": "left",
-                        "type_preset": "rte",
-                        "font": "var(--font-primary--family)",
-                        "font_size": "",
-                        "line_height": "normal",
-                        "letter_spacing": "normal",
-                        "case": "none",
-                        "wrap": "pretty",
-                        "color": "",
-                        "background": false,
-                        "background_color": "#00000026",
-                        "corner_radius": 0,
-                        "padding-block-start": 0,
-                        "padding-block-end": 0,
-                        "padding-inline-start": 0,
-                        "padding-inline-end": 0
-                      },
-                      "blocks": {}
-                    }
-                  },
-                  "block_order": [
-                    "text_wbGpVU"
-                  ]
-                },
-                "accordion_row_kmdwc8": {
-                  "type": "_accordion-row",
-                  "settings": {
-                    "heading": "Size & Fit",
-                    "open_by_default": false,
-                    "icon": "none",
-                    "width": 20
-                  },
-                  "blocks": {
-                    "text_hYWKPd": {
-                      "type": "text",
-                      "settings": {
-                        "text": "<p>Our products are crafted to fit true to size, ensuring that you can confidently select your usual size with ease. Whether you’re looking for a relaxed or tailored fit, our designs are made to complement your unique shape and style.</p>",
-                        "width": "100%",
-                        "max_width": "normal",
-                        "alignment": "left",
-                        "type_preset": "rte",
-                        "font": "var(--font-primary--family)",
-                        "font_size": "",
-                        "line_height": "normal",
-                        "letter_spacing": "normal",
-                        "case": "none",
-                        "wrap": "pretty",
-                        "color": "",
-                        "background": false,
-                        "background_color": "#00000026",
-                        "corner_radius": 0,
-                        "padding-block-start": 0,
-                        "padding-block-end": 0,
-                        "padding-inline-start": 0,
-                        "padding-inline-end": 0
-                      },
-                      "blocks": {}
-                    }
-                  },
-                  "block_order": [
-                    "text_hYWKPd"
-                  ]
                 }
               },
               "block_order": [
-                "accordion_row_TbgNUF",
-                "accordion_row_XMFatY",
-                "accordion_row_kmdwc8"
+                "accordion_row_TbgNUF"
               ]
             }
           },
