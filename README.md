@@ -2,49 +2,74 @@
 
 Shopify theme source for **bkrsclb.com** (BKRSCLB store).
 
-This repo is a series of one-time export snapshots downloaded from Shopify admin —
-not a live-synced copy and not a deployment pipeline. The live theme lives in
-Shopify. This exists to give tools like Claude Design a real source for the
-theme's components, styles and structure, so selectors can be verified against
-actual markup instead of guessed from `assets/base.css`.
+A series of snapshots of the live theme, pulled from Shopify admin. Not a
+live-synced copy and not a deployment pipeline — the live theme lives in
+Shopify. This repo exists so that selectors can be verified against the
+markup the store actually emits, instead of guessed from `assets/base.css`.
 
-## What each commit tracks
+**A stale snapshot is worse than none.** It looks authoritative and is wrong.
+In Aug 2026 a stale read of this repo produced an enhancement pack in which
+~10 selectors matched nothing and 3 actively broke the store.
 
-| Ref | Date | Shopify theme |
-| --- | --- | --- |
-| tag `live-fabric-15aug2026` (`2b01d1c`) | 2026-08-15 | **Fabric — Android Download Banner** (live) |
-| `main` | 2026-08-18 | **bakery-bar-band-aug-18-preview** (preview/duplicate) |
-
-`main` currently tracks the **preview** theme, which adds the Bakery band, the
-join bar and a subscription template on top of the live theme. To see exactly
-what the preview adds:
+## Keeping it current
 
 ```sh
+./snapshot.sh              # pull the live theme, commit, tag, push
+./snapshot.sh --dry-run    # show what changed, touch nothing
+./snapshot.sh --no-push    # commit and tag locally
+./snapshot.sh --theme ID   # snapshot a specific theme instead of live
+```
+
+Run it after **any** theme change: a `shopify theme push`, an edit in the
+theme editor, publishing a different theme, or installing an app.
+
+It resolves the live theme itself (`shopify theme list --json`), so there is
+no theme id to maintain. It is idempotent — if the repo already matches, it
+says so and exits without committing, which makes it safe on a schedule.
+
+Safety rails, in order: refuses a dirty worktree; aborts if the pull returns
+no `layout/theme.liquid` or fewer than 50 `.liquid` files (so a partial pull
+can never `rsync --delete` the repo); scans the staged diff for Shopify,
+Stripe and Google keys before committing.
+
+Requires the Shopify CLI (authenticated), `git`, `rsync` and `python3`.
+
+## Snapshots
+
+Every run tags `live-<theme-slug>-<date>`, so any past state stays diffable.
+
+| Tag | Date | Shopify theme |
+| --- | --- | --- |
+| `live-fabric-15aug2026` (`2b01d1c`) | 2026-08-15 | Fabric — Android Download Banner |
+| `live-bakery-bar-band-bkrsclb-enhance-v2-20260824` | 2026-08-24 | BAKERY bar + band + BKRSCLB enhance v2 |
+
+```sh
+git tag -l 'live-*'                                   # every snapshot
 git diff live-fabric-15aug2026..main -- sections/ templates/ assets/
 ```
 
-The live-theme snapshot is preserved at the tag, so nothing was lost by moving
-`main` forward.
+## Reading this repo correctly
 
-## Pulling a fresh snapshot
-
-Shopify admin → Online Store → Themes → **…** on the theme → **Download theme
-file**. Then, from the repo root:
+`base.css` carries orphan rules for classes **no Liquid file emits** —
+`.drawer__title`, `.drawer-toggle` and `.drawer__close` are all confirmed
+dead here. Before relying on any selector:
 
 ```sh
-rsync -a --delete \
-  --exclude='.git/' --exclude='.gitignore' --exclude='README.md' --exclude='.DS_Store' \
-  /path/to/theme_export__.../ .
-git add -A && git commit
+grep -rl --include='*.liquid' 'your-class-name' .     # 0 files = dead
 ```
 
-Tag the commit with the theme name and export date so the table above stays
-useful.
+Also check whether the value is written as an inline custom property in
+Liquid (Horizon does this constantly, e.g. `--gallery-aspect-ratio` in
+`snippets/card-gallery.liquid`). An inline declaration beats any external
+stylesheet regardless of specificity.
+
+And mind load order: Horizon ships most component CSS in per-block
+`{% stylesheet %}` tags that Shopify injects through `{{ content_for_header }}`.
+A stylesheet linked before that point loses every equal-specificity tie.
 
 ## Note on `.gitignore`
 
-It is `.DS_Store`, `node_modules/`, `*.log` — three lines, 30 bytes. It has never
-excluded `*.liquid`, and all 299+ Liquid files have been tracked since the first
-commit. If a tool reports that this repo "has no Liquid files," that is a bad
-read of the repo, not a `.gitignore` problem — check
-`git ls-files '*.liquid' | wc -l` before changing anything.
+Three lines, 30 bytes: `.DS_Store`, `node_modules/`, `*.log`. It has never
+excluded `*.liquid`, and 300+ Liquid files have been tracked since the first
+commit. If a tool claims this repo "has no Liquid files", that is a bad read
+of the repo — check `git ls-files '*.liquid' | wc -l` before changing anything.
