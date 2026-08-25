@@ -1,0 +1,177 @@
+{%- comment -%}
+  THE BAKERY membership — product page section for bkrsclb.com.
+
+  Why this exists: the subscription product lives on razfresco.com, not on
+  this store. BKRSCLB cannot take a recurring payment, so this section never
+  renders a cart form. Every button is an absolute permalink to razfresco.com
+  that adds the correct selling plan and goes straight to checkout.
+
+  Applied to a product through the template suffix "bakery-membership".
+  See snippets/product-card.liquid for the matching grid-card behaviour.
+{%- endcomment -%}
+
+{{ 'bkrs-subscribe.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign p = product
+  if p == blank
+    assign p = closest.product
+  endif
+
+  assign vid = section.settings.variant_id | strip
+  assign p_mo = section.settings.plan_monthly | strip
+  assign p_yr = section.settings.plan_annual | strip
+
+  comment
+    remove_last: '/' eats the second slash of "https://" when there is no
+    trailing slash to remove. Test the last character explicitly instead.
+  endcomment
+  assign base = section.settings.store_url | strip
+  assign tail = base | slice: -1
+  if tail == '/'
+    assign cut = base.size | minus: 1
+    assign base = base | slice: 0, cut
+  endif
+
+  assign ref = section.settings.ref | strip | default: 'bkrsclb-product'
+
+  assign show_plans = true
+  if vid == blank or p_mo == blank or p_yr == blank
+    assign show_plans = false
+  endif
+
+  assign url_mo = base | append: '/cart/add?id=' | append: vid | append: '&quantity=1&selling_plan=' | append: p_mo | append: '&return_to=/checkout&ref=' | append: ref
+  assign url_yr = base | append: '/cart/add?id=' | append: vid | append: '&quantity=1&selling_plan=' | append: p_yr | append: '&return_to=/checkout&ref=' | append: ref
+
+  assign body = section.settings.body
+  if body == blank
+    assign body = p.description
+  endif
+-%}
+
+<div class="bkrs-mp">
+  <div class="bkrs-mp__in">
+
+    <div class="bkrs-mp__media">
+      {%- if section.settings.image != blank -%}
+        {{ section.settings.image | image_url: width: 1200 | image_tag: loading: 'eager', class: 'bkrs-mp__img', alt: p.title }}
+      {%- elsif p.featured_media != blank -%}
+        {{ p.featured_media | image_url: width: 1200 | image_tag: loading: 'eager', class: 'bkrs-mp__img', alt: p.title }}
+      {%- else -%}
+        <div class="bkrs-mp__img bkrs-mp__img--empty" aria-hidden="true"></div>
+      {%- endif -%}
+    </div>
+
+    <div class="bkrs-mp__offer">
+      {%- if section.settings.kicker != blank -%}
+        <p class="bkrs-mp__k">{{ section.settings.kicker }}</p>
+      {%- endif -%}
+
+      <h1 class="bkrs-mp__h">{{ section.settings.heading | default: p.title }}</h1>
+
+      {%- if section.settings.price_line != blank -%}
+        <p class="bkrs-mp__price">{{ section.settings.price_line }}</p>
+      {%- endif -%}
+
+      {%- if body != blank -%}
+        <div class="bkrs-mp__body rte">{{ body }}</div>
+      {%- endif -%}
+
+      {%- if show_plans -%}
+        <div class="bkrs-mp__btns">
+          <span class="bkrs-jbtns">
+            {%- if section.settings.free_url != blank -%}
+              <a class="bkrs-jbtn bkrs-jbtn--free" href="{{ section.settings.free_url }}" target="_blank" rel="noopener">{{ section.settings.label_free }}</a>
+            {%- endif -%}
+            <a class="bkrs-jbtn bkrs-jbtn--month" href="{{ url_mo }}">{{ section.settings.label_monthly }}</a>
+            <a class="bkrs-jbtn bkrs-jbtn--year" href="{{ url_yr }}">{{ section.settings.label_annual }}{% if section.settings.badge != blank %} <span class="bkrs-badge">{{ section.settings.badge }}</span>{% endif %}</a>
+          </span>
+        </div>
+      {%- else -%}
+        <p class="bkrs-mp__fine">Checkout is not configured yet — set the variant and selling plan IDs in the theme editor.</p>
+      {%- endif -%}
+
+      {%- if section.settings.fine != blank -%}
+        <p class="bkrs-mp__fine">{{ section.settings.fine }}</p>
+      {%- endif -%}
+
+      {%- if section.settings.note != blank -%}
+        <p class="bkrs-mp__note">{{ section.settings.note }}</p>
+      {%- endif -%}
+    </div>
+
+  </div>
+</div>
+
+{% stylesheet %}
+  .bkrs-mp { padding: 40px 0 56px; }
+  .bkrs-mp__in {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+    max-width: var(--page-width, 1200px);
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  .bkrs-mp__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 70vh;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  .bkrs-mp__img--empty { aspect-ratio: 1 / 1; background: #1a1a1a; }
+  .bkrs-mp__k {
+    margin: 0 0 10px;
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    opacity: .75;
+  }
+  .bkrs-mp__h { margin: 0 0 8px; line-height: 1.05; }
+  .bkrs-mp__price { margin: 0 0 20px; font-size: 18px; font-weight: 600; }
+  .bkrs-mp__body { margin: 0 0 26px; line-height: 1.55; }
+  .bkrs-mp__btns { margin: 0 0 14px; }
+  .bkrs-mp__btns .bkrs-jbtns { display: flex; flex-wrap: wrap; gap: 10px; }
+  .bkrs-mp__fine { margin: 0 0 6px; font-size: 13px; opacity: .7; }
+  .bkrs-mp__note { margin: 10px 0 0; font-size: 13px; opacity: .7; }
+  @media (max-width: 749px) {
+    .bkrs-mp { padding: 24px 0 40px; }
+    .bkrs-mp__in { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+    .bkrs-mp__img { max-height: 46vh; }
+    .bkrs-mp__btns .bkrs-jbtns { flex-direction: column; align-items: stretch; }
+    .bkrs-mp__btns .bkrs-jbtn { text-align: center; }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "BAKERY membership",
+  "tag": "section",
+  "settings": [
+    { "type": "paragraph", "content": "The subscription lives on razfresco.com. This section never adds anything to the BKRSCLB cart." },
+    { "type": "text", "id": "kicker", "label": "Kicker", "default": "Members only" },
+    { "type": "text", "id": "heading", "label": "Heading", "info": "Leave blank to use the product title." },
+    { "type": "text", "id": "price_line", "label": "Price line", "default": "From $1.00 / month" },
+    { "type": "richtext", "id": "body", "label": "Body copy", "info": "Leave blank to use the product description." },
+    { "type": "image_picker", "id": "image", "label": "Image", "info": "Leave blank to use the featured image of the product." },
+    { "type": "header", "content": "Buttons" },
+    { "type": "text", "id": "label_free", "label": "Free button", "default": "Listen free" },
+    { "type": "text", "id": "free_url", "label": "Free button link", "default": "https://streaming.bkrsclb.com", "info": "Shown first, opens in a new tab. Clear this field to remove the button." },
+    { "type": "text", "id": "label_monthly", "label": "Monthly button", "default": "JOIN — $1.00 / month" },
+    { "type": "text", "id": "label_annual", "label": "Annual button", "default": "JOIN — $9.99 / year" },
+    { "type": "text", "id": "badge", "label": "Badge on the annual button", "default": "2 months free" },
+    { "type": "text", "id": "fine", "label": "Fine print", "default": "$1.00 × 12 = $12.00. A year is $9.99. Cancel anytime." },
+    { "type": "text", "id": "note", "label": "Handoff note", "default": "Checkout is completed on razfresco.com. One sign-up covers The Bakery app and the BKRSCLB online store." },
+    { "type": "header", "content": "Checkout" },
+    { "type": "text", "id": "store_url", "label": "Store the plan lives on", "default": "https://razfresco.com" },
+    { "type": "text", "id": "variant_id", "label": "Variant ID", "default": "47737797705877" },
+    { "type": "text", "id": "plan_monthly", "label": "Monthly selling plan ID", "default": "3250192533" },
+    { "type": "text", "id": "plan_annual", "label": "Annual selling plan ID", "default": "3250159765" },
+    { "type": "text", "id": "ref", "label": "Tracking ref", "default": "bkrsclb-product" }
+  ],
+  "presets": [{ "name": "BAKERY membership" }]
+}
+{% endschema %}

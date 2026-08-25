@@ -3,11 +3,28 @@
   {% assign product_title = '<p>' | append: text | append: '</p>' %}
   {% render 'text', fallback_text: product_title, block: block %}
 {% else %}
+  {% liquid
+    comment
+      BKRSCLB — external checkout products. The title is its own anchor, so it
+      needs the same swap as the card overlay and the gallery image.
+    endcomment
+    assign bkrs_title_url = closest.product.selected_or_first_available_variant.url
+    assign bkrs_external_url = closest.product.metafields.custom.external_url.value | default: ''
+    if bkrs_external_url == blank and settings.bkrs_ext_handles != blank
+      assign bkrs_ext_handles = settings.bkrs_ext_handles | replace: ' ', '' | split: ','
+      if bkrs_ext_handles contains closest.product.handle
+        assign bkrs_external_url = settings.bkrs_ext_url
+      endif
+    endif
+    if bkrs_external_url != blank
+      assign bkrs_title_url = bkrs_external_url
+    endif
+  %}
   {% assign product_title = '<p>' | append: closest.product.title | append: '</p>' %}
   <a
     class="contents user-select-text"
     ref="productTitleLink"
-    href="{{ closest.product.selected_or_first_available_variant.url }}"
+    href="{{ bkrs_title_url }}"
   >
     {% render 'text', fallback_text: product_title, block: block %}
   </a>

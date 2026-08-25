@@ -5,6 +5,40 @@
     assign product = collections.all.products.first
   endif
 
+  comment
+    BKRSCLB failsafe — a product carrying custom.external_url is billed on
+    another store. Whatever template it lands on, it must never render a cart
+    form here, because this store cannot process that order. The dedicated
+    page is templates/product.bakery-membership.json; this is the net under it.
+  endcomment
+  assign bkrs_external_url = product.metafields.custom.external_url.value | default: ''
+  if bkrs_external_url == blank and settings.bkrs_ext_handles != blank
+    assign bkrs_ext_handles = settings.bkrs_ext_handles | replace: ' ', '' | split: ','
+    if bkrs_ext_handles contains product.handle
+      assign bkrs_external_url = settings.bkrs_ext_url
+    endif
+  endif
+  assign bkrs_external_cta = product.metafields.custom.external_cta.value | default: settings.bkrs_ext_cta | default: 'Join The Bakery'
+
+  comment
+    Build the two plan permalinks so the default product template shows the
+    whole offer, not just one generic button. Same slash-safe base handling as
+    bkrs-bakery-band.liquid: remove_last: '/' eats the second slash of
+    "https://" when there is no trailing slash to remove.
+  endcomment
+  assign bkrs_plans = false
+  if bkrs_external_url != blank and settings.bkrs_ext_variant_id != blank and settings.bkrs_ext_plan_monthly != blank and settings.bkrs_ext_plan_annual != blank
+    assign bkrs_base = settings.bkrs_ext_store_url | strip
+    assign bkrs_tail = bkrs_base | slice: -1
+    if bkrs_tail == '/'
+      assign bkrs_cut = bkrs_base.size | minus: 1
+      assign bkrs_base = bkrs_base | slice: 0, bkrs_cut
+    endif
+    assign bkrs_url_mo = bkrs_base | append: '/cart/add?id=' | append: settings.bkrs_ext_variant_id | append: '&quantity=1&selling_plan=' | append: settings.bkrs_ext_plan_monthly | append: '&return_to=/checkout&ref=bkrsclb-product'
+    assign bkrs_url_yr = bkrs_base | append: '/cart/add?id=' | append: settings.bkrs_ext_variant_id | append: '&quantity=1&selling_plan=' | append: settings.bkrs_ext_plan_annual | append: '&return_to=/checkout&ref=bkrsclb-product'
+    assign bkrs_plans = true
+  endif
+
   assign variant = closest.product.selected_or_first_available_variant
   assign inventory_quantity = variant.inventory_quantity
   assign inventory_policy = variant.inventory_policy
@@ -38,7 +72,23 @@
   class="buy-buttons-block buy-buttons-block--{{ block.id }}"
   {{ block.shopify_attributes }}
 >
-  {%- if product != blank -%}
+  {%- if bkrs_external_url != blank -%}
+    {{ 'bkrs-subscribe.css' | asset_url | stylesheet_tag }}
+    <span class="bkrs-jbtns bkrs-jbtns--stack">
+      {%- if settings.bkrs_ext_free_url != blank -%}
+        <a class="bkrs-jbtn bkrs-jbtn--free" href="{{ settings.bkrs_ext_free_url }}" target="_blank" rel="noopener">{{ settings.bkrs_ext_label_free | default: 'Listen free' }}</a>
+      {%- endif -%}
+      {%- if bkrs_plans -%}
+        <a class="bkrs-jbtn bkrs-jbtn--month" href="{{ bkrs_url_mo }}">{{ settings.bkrs_ext_label_month | default: 'JOIN' }}</a>
+        <a class="bkrs-jbtn bkrs-jbtn--year" href="{{ bkrs_url_yr }}">{{ settings.bkrs_ext_label_year | default: 'JOIN' }}{% if settings.bkrs_ext_badge != blank %} <span class="bkrs-badge">{{ settings.bkrs_ext_badge }}</span>{% endif %}</a>
+      {%- else -%}
+        <a class="bkrs-jbtn bkrs-jbtn--year" href="{{ bkrs_external_url }}">{{ bkrs_external_cta }}</a>
+      {%- endif -%}
+    </span>
+    {%- if settings.bkrs_ext_fine != blank -%}
+      <p class="bkrs-ext-fine">{{ settings.bkrs_ext_fine }}</p>
+    {%- endif -%}
+  {%- elsif product != blank -%}
     {%- assign product_form_id = 'BuyButtons-ProductForm-' | append: section.id -%}
     <product-form-component
       data-section-id="{{ section.id }}"

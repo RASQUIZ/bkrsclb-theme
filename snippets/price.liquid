@@ -10,6 +10,19 @@
 {%- liquid
   assign show_unit_price = show_unit_price | default: false
   assign show_sale_price_first = show_sale_price_first | default: false
+
+  comment
+    BKRSCLB — a product carrying custom.card_price_label shows that string
+    instead of its Shopify price. Used where the real price is a subscription
+    billed on another store and the raw number would mislead.
+  endcomment
+  assign bkrs_price_label = product_resource.metafields.custom.card_price_label.value | default: ''
+  if bkrs_price_label == blank and settings.bkrs_ext_handles != blank and settings.bkrs_ext_price_label != blank
+    assign bkrs_ext_handles = settings.bkrs_ext_handles | replace: ' ', '' | split: ','
+    if bkrs_ext_handles contains product_resource.handle
+      assign bkrs_price_label = settings.bkrs_ext_price_label
+    endif
+  endif
   assign selected_variant = product_resource.selected_or_first_available_variant
   assign price = selected_variant.price
   assign compare_at_price = selected_variant.compare_at_price
@@ -73,7 +86,9 @@
 -%}
 
 <div ref="priceContainer">
-  {% if has_volume_pricing %}
+  {% if bkrs_price_label != blank %}
+    <span class="price">{{ bkrs_price_label }}</span>
+  {% elsif has_volume_pricing %}
     {% comment %} Volume pricing display {% endcomment %}
     {% if show_compare_price %}
       <span role="group">

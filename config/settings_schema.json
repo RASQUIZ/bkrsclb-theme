@@ -2284,5 +2284,109 @@
         "default": "equal-width-buttons"
       }
     ]
+  },
+  {
+    "name": "BKRSCLB — external checkout",
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "Products listed here are billed on another store. Their cards link straight out, they never offer quick add, and their product pages never render a cart form. A custom.external_url metafield on a product overrides everything below."
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_handles",
+        "label": "Product handles",
+        "default": "bkrsclb-club-member",
+        "info": "Comma separated. Clear this field to switch the behaviour off."
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_url",
+        "label": "Where the card goes",
+        "default": "https://razfresco.com/pages/club-member?ref=bkrsclb-nowserving"
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_price_label",
+        "label": "Price shown on the card",
+        "default": "From $1.00 / month",
+        "info": "Replaces the Shopify price on the grid card. Clear it to show the real price."
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_cta",
+        "label": "Fallback button label",
+        "default": "Join The Bakery",
+        "info": "Only used if the product ever renders on a template other than bakery-membership."
+      },
+      {
+        "type": "header",
+        "content": "Offer shown on the product page"
+      },
+      {
+        "type": "paragraph",
+        "content": "Used when the product renders on the default template. Leave the plan IDs blank to fall back to a single button pointing at the URL above."
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_label_free",
+        "label": "Free button",
+        "default": "Listen free"
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_free_url",
+        "label": "Free button link",
+        "default": "https://streaming.bkrsclb.com"
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_label_month",
+        "label": "Monthly button",
+        "default": "JOIN — $1.00 / month"
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_label_year",
+        "label": "Annual button",
+        "default": "JOIN — $9.99 / year"
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_badge",
+        "label": "Badge on the annual button",
+        "default": "2 months free"
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_fine",
+        "label": "Fine print",
+        "default": "$1.00 × 12 = $12.00. A year is $9.99. Cancel anytime."
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_store_url",
+        "label": "Store the plan lives on",
+        "default": "https://razfresco.com"
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_variant_id",
+        "label": "Variant ID",
+        "default": "47737797705877"
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_plan_monthly",
+        "label": "Monthly selling plan ID",
+        "default": "3250192533"
+      },
+      {
+        "type": "text",
+        "id": "bkrs_ext_plan_annual",
+        "label": "Annual selling plan ID",
+        "default": "3250159765"
+      }
+    ]
   }
 ]

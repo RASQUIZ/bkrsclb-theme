@@ -24,8 +24,24 @@
         </div>
       {%- endif -%}
     </div>
+    {%- liquid
+      comment
+        BKRSCLB — never render quick add for a product billed on another store.
+        Hiding it with CSS is not enough; the form must not exist, because this
+        store cannot process that order.
+      endcomment
+      assign bkrs_external_url = product.metafields.custom.external_url.value | default: ''
+      if bkrs_external_url == blank and settings.bkrs_ext_handles != blank
+        assign bkrs_ext_handles = settings.bkrs_ext_handles | replace: ' ', '' | split: ','
+        if bkrs_ext_handles contains product.handle
+          assign bkrs_external_url = settings.bkrs_ext_url
+        endif
+      endif
+    -%}
     {%  if settings.quick_add or settings.mobile_quick_add %}
-      {% render 'quick-add', product: product, section_id: section.id %}
+      {% if bkrs_external_url == blank %}
+        {% render 'quick-add', product: product, section_id: section.id %}
+      {% endif %}
     {% endif %}
   {% endunless %}
 {% endcapture %}

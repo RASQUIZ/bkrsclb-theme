@@ -31,6 +31,26 @@
     assign has_mobile_quick_add = true
   endif
 
+  comment
+    BKRSCLB — external checkout products.
+
+    A product carrying custom.external_url is not sold on this store. Its card
+    links straight out to the store that does sell it, and it never offers
+    quick add, because nothing here can process that order. Used by THE BAKERY
+    membership, which is billed on razfresco.com.
+  endcomment
+  assign bkrs_external_url = product.metafields.custom.external_url.value | default: ''
+  if bkrs_external_url == blank and settings.bkrs_ext_handles != blank
+    assign bkrs_ext_handles = settings.bkrs_ext_handles | replace: ' ', '' | split: ','
+    if bkrs_ext_handles contains product.handle
+      assign bkrs_external_url = settings.bkrs_ext_url
+    endif
+  endif
+  if bkrs_external_url != blank
+    assign has_quick_add = false
+    assign has_mobile_quick_add = false
+  endif
+
   assign product_card_id = 'product-card-link-' | append: block.id | append: '-' | append: product.id
   assign product_card_gap_value = product_card_gap | default: block_settings.product_card_gap
 
@@ -54,7 +74,7 @@
   endif
 %}
 
-{%- if settings.transition_to_main_product -%}
+{%- if settings.transition_to_main_product and bkrs_external_url == blank -%}
   <product-card-link
     data-product-id="{{ product.id }}"
     data-featured-media-url="{{ featured_media_url }}"
@@ -68,7 +88,11 @@
   class="product-card"
   data-product-id="{{ product.id }}"
   id="product-card-{{ block.id }}"
-  data-product-transition="{{ settings.transition_to_main_product }}"
+  {% if bkrs_external_url != blank %}
+    data-product-transition="false"
+  {% else %}
+    data-product-transition="{{ settings.transition_to_main_product }}"
+  {% endif %}
   {{ block.shopify_attributes }}
   {% if onboarding %}
     data-placeholder="true"
@@ -76,9 +100,11 @@
 >
   <a
     id="{{ product_card_id | md5 }}"
-    {% unless onboarding %}
+    {% if bkrs_external_url != blank %}
+      href="{{ bkrs_external_url }}"
+    {% elsif onboarding == false %}
       href="{{ variant_to_link.url }}"
-    {% endunless %}
+    {% endif %}
     class="product-card__link"
     ref="productCardLink"
   >
@@ -114,7 +140,7 @@
     {{ children }}
   </div>
 </product-card>
-{%- if settings.transition_to_main_product -%}
+{%- if settings.transition_to_main_product and bkrs_external_url == blank -%}
   </product-card-link>
 {%- endif -%}
 

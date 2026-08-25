@@ -134,3 +134,11 @@ a.bkrs-jbtn.bkrs-jbtn--free{color:#ffffff;}
   .bkrs-band__r .bkrs-jbtns{width:100%;}
   .bkrs-band__r .bkrs-jbtn{flex:1 1 100%; justify-content:center;}
 }
+
+/* Stacked variant — used by the buy-buttons failsafe on external-checkout
+   products, where there is one button and it should fill the column. */
+.bkrs-jbtns--stack{display:flex;flex-direction:column;align-items:stretch;gap:10px}
+.bkrs-jbtns--stack .bkrs-jbtn{text-align:center;justify-content:center}
+
+/* Fine print under the external-checkout buttons on a product page. */
+.bkrs-ext-fine{margin:10px 0 0;font-size:13px;opacity:.7}
