@@ -472,3 +472,40 @@ a[href*='youtube.com'] {
    var(--minimum-touch-target) = 44px (theme-styles-variables.liquid:546,599;
    header-actions.liquid:584). Same for .close-button, already 44×44 at
    base.css:1759-1764. Both are kept so the guarantee survives a theme update. */
+
+
+/* ---------------------------------------------------------------------------
+   8. FOOTER ROW AT 750-819px — RAZFRESCO link ran off the page
+   ---------------------------------------------------------------------------
+   Pre-existing bug, not introduced by this pack, though MANTEKA widened it
+   slightly (40px of overflow without this stylesheet, 54px with).
+
+   At 750px Horizon flips the footer's last row from a stacked column to two
+   columns. In that layout:
+     .email-signup-block   456px, min-width: fit-content  (blocks/email-signup.liquid:106)
+     the RAZFRESCO column  292px, .rf-link is white-space: nowrap at 32px
+   Neither can shrink, the row can only offer 688px, and 456 + 292 + gap = ~764.
+   The page overflowed by up to 54px; iPad portrait (768px) sits in the band.
+
+   email-signup already does `min-width: unset` below 750px — its author solved
+   this for phones. This extends the same relief up to 819px, the width at which
+   both columns fit unaided. Above 819px nothing changes.
+
+   Specificity is doing the work, not !important: this selector is (0,3,0) and
+   beats email-signup's own (0,1,0) rule, which arrives via content_for_header.
+   Verified with real computed styles at 700/749/750/760/768/790/800/819/820/
+   900/1024/1440 — min-width resolves to 0px only inside the band, and document
+   scrollWidth equals the viewport at every one of them.
+
+   NOTE ON PLACEMENT: this belongs with the RAZFRESCO link's own custom-liquid
+   block in sections/footer-group.json, but that file cannot be pushed with the
+   Shopify CLI — it carries "type": "Footer" against a lowercase
+   sections/footer.liquid, and the CLI's validator rejects the case mismatch
+   even though the storefront renders it. Fixing that casing is a separate,
+   deliberate change. Until then the rule lives here.
+   --------------------------------------------------------------------------- */
+@media screen and (min-width: 750px) and (max-width: 819px) {
+  .layout-panel-flex:has(> * > .rf-wrap) .email-signup-block {
+    min-width: 0;
+  }
+}
