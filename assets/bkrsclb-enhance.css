@@ -497,12 +497,23 @@ a[href*='youtube.com'] {
    900/1024/1440 — min-width resolves to 0px only inside the band, and document
    scrollWidth equals the viewport at every one of them.
 
-   NOTE ON PLACEMENT: this belongs with the RAZFRESCO link's own custom-liquid
-   block in sections/footer-group.json, but that file cannot be pushed with the
-   Shopify CLI — it carries "type": "Footer" against a lowercase
-   sections/footer.liquid, and the CLI's validator rejects the case mismatch
-   even though the storefront renders it. Fixing that casing is a separate,
-   deliberate change. Until then the rule lives here.
+   NOTE ON PLACEMENT: this arguably belongs with the RAZFRESCO link's own
+   custom-liquid block in sections/footer-group.json. It lives here instead
+   because this layer already loads after content_for_header and so wins the
+   cascade without any specificity games.
+
+   An earlier version of this comment claimed footer-group.json could not be
+   pushed via the CLI because it carries "type": "Footer" against a lowercase
+   sections/footer.liquid. That was wrong. Lowercasing it fails identically.
+   The real cause: `shopify theme push --only sections/footer-group.json`
+   validates the JSON against ONLY the files in the push set, so it cannot see
+   the section files already on the theme and reports
+     Section type 'Footer' does not refer to an existing section file
+   Include the section files it references and the push succeeds with the
+   capital F untouched:
+     shopify theme push --only sections/footer-group.json \
+       --only sections/section.liquid --only sections/footer.liquid \
+       --only sections/footer-utilities.liquid
    --------------------------------------------------------------------------- */
 @media screen and (min-width: 750px) and (max-width: 819px) {
   .layout-panel-flex:has(> * > .rf-wrap) .email-signup-block {
