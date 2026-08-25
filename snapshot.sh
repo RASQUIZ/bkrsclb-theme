@@ -106,7 +106,7 @@ if [ "$DRY_RUN" -eq 1 ]; then
   # rsync itemises time-only changes as ..t; git does not track mtime, so
   # those are noise. Show real content changes, additions and deletions only.
   rsync "${RSYNC_ARGS[@]}" --dry-run --itemize-changes "$TMP"/ "$REPO"/ \
-    | grep -vE '^[<>.]f\\.\\.t' \
+    | grep -vE '^[<>.]f\.\.t' \
     | grep -vE '^\.d' | head -60
   echo
   say "DRY RUN — no files written, nothing committed."
