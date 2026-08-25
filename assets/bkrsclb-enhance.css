@@ -1,0 +1,474 @@
+/* ============================================================================
+   BKRSCLB — store enhancement layer
+   Theme: Shopify Horizon ("Fabric — Android Download Banner")
+   File:  assets/bkrsclb-enhance.css
+   ----------------------------------------------------------------------------
+   Purely additive. No markup, no JS, no Liquid, no template JSON is touched, so
+   every link, redirect, cart action and app block behaves exactly as it does
+   today. Each block below is independent — delete a block to revert that one
+   change.
+
+   v2 — every selector in this file has been verified against the theme's REAL
+   Liquid markup (RASQUIZ/bkrsclb-theme @ 2b01d1c: 299 .liquid files across
+   layout/, sections/, snippets/, blocks/) plus the live section JSON, not
+   against assets/base.css alone. v1 selectors that matched nothing have been
+   removed or corrected; each correction is annotated with the file:line it was
+   verified against.
+
+   LOAD ORDER IS LOAD-BEARING. This file MUST be linked AFTER
+   {{ content_for_header }} in layout/theme.liquid (i.e. as the last thing in
+   <head>). Horizon puts most of its component CSS in per-section/per-block
+   {% stylesheet %} tags, which Shopify concatenates and injects through
+   content_for_header. Linking this file next to {% render 'stylesheets' %}
+   (theme.liquid:28) or even after {% render 'color-schemes' %} (theme.liquid:32)
+   loses every equal-specificity tie to that bundle. See HANDOFF.md §2b.
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   0. BRAND TOKENS
+   Store palette stays neutral; green is THE BAKERY's accent, red is YouTube's.
+   --------------------------------------------------------------------------- */
+:root {
+  --bkrs-green: #208311;
+  --bkrs-green-dark: #1a6b0e;
+  --bkrs-red: #ff0000;
+  --bkrs-border: #d3cec5;
+  --bkrs-ink: #030302;
+}
+
+/* ---------------------------------------------------------------------------
+   1. MANTEKA DISPLAY TYPE
+   Font files live in assets/. Relative url() resolves against the same CDN
+   asset directory, so no .css.liquid and no asset_url filter is needed.
+   --------------------------------------------------------------------------- */
+/* v1 listed .woff2 and .woff first, but neither file exists in the pack — that
+   was two guaranteed 404s on every page before the fallback chain reached .otf.
+   Re-add the first two lines only once the converted files are uploaded. */
+@font-face {
+  font-family: 'Manteka';
+  src: url('Manteka.otf') format('opentype'),
+       url('Manteka.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* This is a REPAIR, not just a restyle.
+   config/settings_data.json stores type_font_h1/h2/h3 = "primary" and
+   type_font_h4 = "secondary", but config/settings_schema.json only allows
+   "heading" | "accent" (h1–h3). snippets/theme-styles-variables.liquid:347
+   builds the token as  --font-h1--family: var(--font-primary--family);  and
+   --font-primary--family is defined NOWHERE (only --font-body/-subheading/
+   -heading/-accent exist, theme-styles-variables.liquid:158-167). So h1–h4
+   currently resolve to an invalid value and silently fall back to the inherited
+   body face. That is why every heading on the store renders as Geist today.
+   These three lines are the first thing that makes the tokens resolve at all. */
+:root {
+  --font-h1--family: 'Manteka', var(--font-body--family, sans-serif);
+  --font-h2--family: 'Manteka', var(--font-body--family, sans-serif);
+  --font-h3--family: 'Manteka', var(--font-body--family, sans-serif);
+}
+
+/* MANTEKA is a caps display face — give it caps + tighter leading wherever it
+   lands, and stop it from being used at body sizes.
+   Classes are DOUBLED (.h1.h1) on purpose: snippets/text.liquid:51 puts the
+   preset class on a wrapper <div>, and base.css:823-831 styles that wrapper as
+   .h1.h1 / .text-block.h1 > * — both (0,2,0). A single .h1 (0,1,0) loses. */
+.h1.h1, .h2.h2, .h3.h3,
+.text-block.h1 > *, .text-block.h2 > *, .text-block.h3 > *,
+h1:not(.h4):not(.h5):not(.h6),
+h2:not(.h4):not(.h5):not(.h6):not(.bkrs-band__h),
+h3:not(.h4):not(.h5):not(.h6) {
+  text-transform: uppercase;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+}
+
+/* :not(.bkrs-band__h) — compatibility with the live theme's BAKERY band
+   (sections/bkrs-bakery-band.liquid:46, <h2 class="bkrs-band__h">). That section
+   deliberately sets `line-height: 1.1` in assets/bkrs-subscribe.css:75, but at
+   (0,1,0) it loses to this selector's (0,3,1) no matter how late it loads — so
+   without the exclusion the band heading would silently drop to 0.95 leading at
+   30px/24px. Excluding it keeps the section's own metrics. The band heading still
+   picks up MANTEKA, because that comes from the --font-h2--family token above and
+   the section never sets font-family. */
+/* v1 also set `text-wrap: pretty` here. Removed — snippets/text.liquid:142
+   deliberately sets `text-wrap: balance` on headline wrappers, and overriding it
+   silently un-balanced every headline in the theme. */
+
+/* The :not(.h4) guard is real and necessary: blocks/_product-card-gallery.liquid:38
+   renders the zoom-out product title as <h3 class="h4">, which must stay Geist. */
+
+/* Cart drawer heading. v1 targeted .drawer__title — that class exists only as an
+   orphan rule in base.css:2256 and is emitted by ZERO Liquid files, so the rule
+   was dead. The real element is
+   snippets/header-actions.liquid:152  <h2 class="cart-drawer__heading h4">.
+   Class is doubled to beat base.css:885 `.h4.h4 { font-family: var(--font-h4--family) }`. */
+.cart-drawer__heading.cart-drawer__heading {
+  font-family: 'Manteka', var(--font-body--family, sans-serif);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* ---------------------------------------------------------------------------
+   2. PRODUCT TILES — borderless, airy, square
+   Real DOM (snippets/product-card.liquid:67-107):
+     <product-card class="product-card">
+       <a class="product-card__link">
+       <div class="product-card__content … product-grid__card … border-style" style="…">
+         <div class="card-gallery … border-style" style="--gallery-aspect-ratio: 16 / 9;">
+   NOTE: .product-card__content and .product-grid__card are the SAME div
+   (product-card.liquid:91-96). v1 styled them as if they were two elements and
+   put a border-top on it — which drew a hairline across the TOP of the whole
+   tile, above the image, not between image and copy.
+   --------------------------------------------------------------------------- */
+.product-card__content {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* Square 1:1 crop across carousels and grids.
+   The ratio is NOT a CSS rule — snippets/card-gallery.liquid:72 writes it as an
+   inline custom property (--gallery-aspect-ratio) from the section's image_ratio
+   setting, consumed by base.css:1619 and snippets/product-media.liquid:137.
+   An inline declaration beats any external one regardless of specificity, so
+   !important is mandatory here. The theme uses this exact idiom itself at
+   snippets/editorial-product-grid.liquid:76.
+
+   The hairline between image and copy is drawn on the gallery's own bottom edge.
+   v1 put it on .product-card__content, which is the tile ROOT — so the line
+   landed above the image, across the whole tile. A `.card-gallery + *` selector
+   would be wrong too: the next sibling is
+   <div class="product-grid-view-zoom-out--details">
+   (blocks/_product-card-gallery.liquid:36-43), the zoom-out-view title, not the
+   visible copy. .border-style (base.css:2368) uses border-* longhands, so this
+   shorthand wins from a later sheet without !important. */
+.card-gallery {
+  --gallery-aspect-ratio: 1 !important;
+  border-bottom: 1px solid var(--color-border, var(--bkrs-border));
+  padding-bottom: 11px;
+  margin-bottom: 12px;
+}
+
+/* v1 also set width/height/object-fit/aspect-ratio on `.card-gallery img`.
+   All removed: `width:100% + height:100%` makes both dimensions definite, which
+   makes the sibling aspect-ratio a no-op per spec; and object-fit:cover is
+   already applied at higher specificity by base.css:1710
+   (.product-media-container.media-fit img), with .media-fit always present
+   (snippets/card-gallery.liquid:143). The --gallery-aspect-ratio override above
+   does the whole job on its own. */
+
+/* ---------------------------------------------------------------------------
+   3. GRID + CAROUSEL RHYTHM
+   --------------------------------------------------------------------------- */
+/* .resource-list--grid is a literal string, not interpolated
+   (snippets/resource-list.liquid:62 → :107), and is live on both homepage
+   product-list sections (templates/index.json, layout_type: "grid").
+   The inline style= on that element (resource-list.liquid:109) sets ONLY custom
+   properties, never column-gap/row-gap, so these longhands win cleanly over the
+   `gap` shorthand at base.css:3640. */
+@media screen and (max-width: 749px) {
+  /* Wider gutters so a 2-up mobile grid stops feeling cramped. The theme
+     otherwise clamps mobile gaps to 12px (base.css:3623-3636). */
+  .resource-list--grid {
+    column-gap: 16px;
+    row-gap: 28px;
+  }
+}
+
+/* v1 used min-width: 990px here. Corrected to 750px — 990px is not this
+   component's switch point. base.css uses 750px 28× and 990px twice, never for
+   resource-list; column counts change at a *container* query of 750px
+   (base.css:3647-3691). At 990px the gaps jumped a full breakpoint after the
+   columns did. */
+@media screen and (min-width: 750px) {
+  .resource-list--grid {
+    column-gap: 24px;
+    row-gap: 36px;
+  }
+}
+
+/* Section headers ("Classic Collection", "Now Serving") get room to breathe.
+   Verified: sections/product-list.liquid:21 — the only occurrence in the theme. */
+.section-resource-list__header {
+  padding-bottom: 14px;
+}
+
+/* v1's `.resource-list__item { min-width: 0 }` removed — the theme already ships
+   that exact rule at higher specificity in
+   blocks/_featured-blog-posts-card.liquid:111. */
+
+/* ---------------------------------------------------------------------------
+   4. HERO SLIDESHOW
+   --------------------------------------------------------------------------- */
+/* THE WHOLE OF v1's BLOCK 4 IS DELETED. It could never have worked:
+
+   - `.slideshow` is not a class anywhere in the theme. The element is
+     <slideshow-component> (snippets/slideshow.liquid:78); its classes are only
+     ever slideshow--content-*, slideshow--single-media, slideshow--with-hints*,
+     slideshow--stretch-content (sections/slideshow.liquid:36-46).
+   - `.button:empty` can never match. snippets/button.liquid:32 renders the label
+     as "\n  {{ label }}\n", so a blank label still leaves a whitespace text node
+     inside the <a> — and :empty does not match elements containing whitespace.
+   - The two offending hero buttons don't even carry .button. templates/index.json
+     → slideshow_4dDVVh/button_3gTKXg and slideshow_XRwqjk/button_LGxaQh are both
+     {"label": "", "style_class": "link", "custom_width": 50}, rendering as
+     class="size-style link link--button_3gTKXg".
+   - The single-slide control/arrow rules matched nothing either: with one block
+     the theme never renders controls at all (sections/slideshow.liquid:1 and
+     :49-52 gate them behind blocks.size > 1). And `slideshow-arrows` is a custom
+     ELEMENT name, never a class.
+
+   The invisible 50%-wide click target over the hero is REAL — it comes from
+   --size-style-width: 50% (snippets/size-style.liquid:7-13). But it is a DATA
+   problem, not a CSS one. Fix it in the theme editor: either give the button a
+   label (HANDOFF §4.1) or delete the button block. HANDOFF §4.1a has a stopgap
+   rule pinned to those two block ids if you need it hidden before you can get
+   into the editor. */
+
+/* ---------------------------------------------------------------------------
+   5. HOVER STATES — green for BAKERY-bound actions, red for YouTube
+   Attribute selectors target destinations, not label text, so they keep
+   working if the menu is renamed or reordered in the editor.
+   --------------------------------------------------------------------------- */
+
+/* 5a. Primary buttons fill green on hover, white text.
+   :not(.button-unstyled) is REQUIRED. About 20 icon-only controls carry BOTH
+   classes — the cart-drawer close X (snippets/header-actions.liquid:122,162),
+   the mobile menu close (header-drawer.liquid:78,294), gallery zoom buttons
+   (product-media-gallery-content.liquid:428,466,488), slideshow arrows
+   (slideshow-arrow.liquid:33), quick-add (quick-add-modal.liquid:10), the facet
+   drawer (blocks/filters.liquid:282). v1 painted a solid green square behind
+   every one of them on hover: the theme's own
+   `.button-unstyled:hover { background-color: inherit }` (base.css:1483) is the
+   same specificity but loads earlier, so v1 won the tie and broke them. */
+.button:not(.button-unstyled):hover,
+.button:not(.button-unstyled):focus-visible {
+  --button-background-color: var(--bkrs-green);
+  --button-border-color: var(--bkrs-green);
+  --button-color: #ffffff;
+  background-color: var(--bkrs-green);
+  color: #ffffff;
+}
+
+/* 5b. Secondary / outline buttons, and Horizon's "link" button style.
+   The "View all" buttons this was written for are style_class: "link", not
+   "button-secondary" (templates/index.json → product_list_7qzCcB and
+   product_list_wbkVGr, both {"label":"View all","style_class":"link"}), so v1
+   never touched them. `a.link` (0,1,1) is used rather than `.link` (0,1,0)
+   because snippets/button.liquid ships its own `.link:hover` in a
+   {% stylesheet %} block, which loads after this file. */
+.button-secondary:not(.button-unstyled):hover,
+.button-secondary:not(.button-unstyled):focus-visible,
+a.link:hover,
+a.link:focus-visible {
+  --button-background-color: var(--bkrs-green);
+  --button-border-color: var(--bkrs-green);
+  --button-color: #ffffff;
+  color: var(--bkrs-green);
+}
+
+/* v1 also set a literal `border-color` on these. Removed — base.css:1371 sets
+   `border: none` and draws the visible outline with
+   `box-shadow: inset 0 0 0 var(--button-border-width) var(--button-border-color)`
+   (base.css:1382). The --button-border-color custom property above is what
+   actually works; the border-color declaration was inert. */
+
+/* 5c. Any nav or footer link pointing at THE BAKERY.
+   No such href exists in the theme files — it comes from an admin-side nav menu,
+   rendered by blocks/_header-menu.liquid:93. The scoped selector is needed
+   because _header-menu.liquid:322 styles
+   `.menu-list .menu-list__list-item:where(:hover,:focus-within) .menu-list__link`
+   at (0,3,0) from a later-loading {% stylesheet %} block; the plain attribute
+   selector (0,2,1) lost in the header nav. */
+a[href*='streaming.bkrsclb.com']:hover,
+a[href*='streaming.bkrsclb.com']:focus-visible,
+.menu-list .menu-list__list-item:hover .menu-list__link[href*='streaming.bkrsclb.com'],
+.menu-list .menu-list__list-item:focus-within .menu-list__link[href*='streaming.bkrsclb.com'] {
+  color: var(--bkrs-green);
+  text-decoration-color: var(--bkrs-green);
+}
+
+/* 5d. Any link pointing at YouTube goes YouTube red.
+   Live target: sections/footer-group.json → social_links_F94qGb.youtube_url =
+   "https://www.youtube.com/@BKRSCLB", rendered at blocks/social-links.liquid:77.
+   The icon recolours because base.css:779 sets `.icon-default { fill: currentColor }`
+   and the raw path carries no fill attribute (snippets/icon.liquid:304). */
+a[href*='youtube.com']:hover,
+a[href*='youtu.be']:hover,
+a[href*='youtube.com']:focus-visible,
+.menu-list .menu-list__list-item:hover .menu-list__link[href*='youtube.com'] {
+  color: var(--bkrs-red);
+  text-decoration-color: var(--bkrs-red);
+}
+
+/* 5e. Cart icon + count bubble in the header.
+   Verified: <cart-icon class="header-actions__cart-icon"> at
+   snippets/header-actions.liquid:8-12, and
+   <span class="cart-bubble__background"> at snippets/cart-bubble.liquid:17 —
+   a real <span>, not an SVG node, so background-color is correct here (no fill). */
+.header-actions__cart-icon:hover {
+  color: var(--bkrs-green);
+}
+.header-actions__cart-icon:hover .cart-bubble__background {
+  background-color: var(--bkrs-green);
+}
+/* Uses the theme's own motion tokens (base.css:20-21) rather than literal
+   values, so a change to the theme's hover timing carries through. */
+.cart-bubble__background {
+  transition: background-color var(--hover-transition-duration, 0.25s)
+    var(--hover-transition-timing, ease-out);
+}
+
+/* 5f. Newsletter sign-up submit.
+   v1 used `.email-signup …` — that class does not exist. The block wrapper is
+   .email-signup-block (blocks/email-signup.liquid:3) and the submit is
+   .email-signup__button (:42). The .button-unstyled qualifier is required to beat
+   blocks/email-signup.liquid:348, which styles
+   `.email-signup__button.button-unstyled:hover` at (0,3,0) from a later sheet —
+   and this store's footer signup is style_class "button-unstyled",
+   display_type "arrow" (sections/footer-group.json → email_signup_TCQELN).
+   The arrow glyph inherits via fill="currentColor" (snippets/icon.liquid:297). */
+.email-signup__button.button-unstyled:hover,
+.email-signup__button.button-unstyled:focus-visible {
+  color: var(--bkrs-green);
+}
+
+/* v1's `form[action*='/contact#'] button:hover { color: green }` is DELETED.
+   {% form 'contact' %} on /pages/contact renders action="/contact#…" too
+   (blocks/contact-form.liquid:19), and its submit button is style_class "button"
+   (templates/page.contact.json). Rule 5a already paints that button green, so v1
+   then turned its label green on green — the text vanished on hover. */
+
+/* Keep every hover in the theme's motion language: 0.25s ease-out, no bounce.
+   box-shadow is included because the button "border" is drawn with an inset
+   box-shadow (base.css:1382); v1's transition list omitted it, so the border
+   colour snapped while the fill faded. */
+.button,
+.button-secondary,
+a.link,
+.header-actions__cart-icon,
+.email-signup__button,
+a[href*='streaming.bkrsclb.com'],
+a[href*='youtube.com'] {
+  transition: color var(--hover-transition-duration, 0.25s) var(--hover-transition-timing, ease-out),
+    background-color var(--hover-transition-duration, 0.25s) var(--hover-transition-timing, ease-out),
+    border-color var(--hover-transition-duration, 0.25s) var(--hover-transition-timing, ease-out),
+    box-shadow var(--hover-transition-duration, 0.25s) var(--hover-transition-timing, ease-out);
+}
+
+/* ---------------------------------------------------------------------------
+   6. FOOTER — tighter, bigger mark
+   --------------------------------------------------------------------------- */
+/* layout/theme.liquid:109 renders the footer with {% sections 'footer-group' %},
+   so Shopify does inject .shopify-section-group-footer-group on each wrapper.
+   But v1's `:first-of-type` matched the WRONG section. footer-group.json order is
+   ["section_FJ4UEn", "utilities", "section_9FjKrC", "footer"], and
+   sections/footer.liquid:91 declares "tag": "footer" while the other three are
+   <div>. Body's first <div> child is #header-group (theme.liquid:43), so
+   :first-of-type could only ever resolve to the LAST section — the <footer> with
+   the four disabled menu columns — which has no .section-content-wrapper at all
+   (it uses .footer-content, sections/footer.liquid:28). Block 6 was 100% inert.
+
+   The intended target is section_FJ4UEn (padding-block 48/48, holding the icon
+   and the "Shipping Worldwide" heading). It is the first section-group element
+   after </main> (theme.liquid:107 → :109), so an adjacent-sibling selector pins
+   it without hardcoding the section id. */
+#MainContent + .shopify-section-group-footer-group .section-content-wrapper {
+  padding-block-start: 20px;
+  padding-block-end: 18px;
+  row-gap: 8px;
+}
+
+/* The mark above "Shipping Worldwide".
+   v1 targeted `.group-block img` — there is no <img> in the footer group. The
+   block is icon_HMcFqU {"icon":"plane","width":32} with no image_upload, which
+   snippets/icon-or-image.liquid:12-24 renders as an inline
+   <svg class="icon-block__media icon-default" width="32" height="32">.
+   Width comes from an HTML attribute, so a CSS width overrides it without
+   !important; height:auto is already set by blocks/icon.liquid:34.
+   NOTE: v1's `max-height` could never have made a 32px icon bigger. */
+#MainContent + .shopify-section-group-footer-group .icon-block__media {
+  width: 88px;
+  height: auto;
+}
+/* Fallback in case the merchant swaps the icon for an uploaded image. */
+.shopify-section-group-footer-group .group-block img {
+  max-height: 88px;
+  width: auto;
+  height: auto;
+}
+
+@media screen and (max-width: 749px) {
+  #MainContent + .shopify-section-group-footer-group .section-content-wrapper {
+    padding-block-start: 18px;
+    padding-block-end: 16px;
+  }
+  #MainContent + .shopify-section-group-footer-group .icon-block__media {
+    width: 64px;
+  }
+  .shopify-section-group-footer-group .group-block img {
+    max-height: 64px;
+  }
+}
+
+/* The padding declarations DO win once the selector is right: the section's
+   inline style= only emits custom properties (--padding-block-start etc. via
+   snippets/spacing-style.liquid:18-33), consumed by the (0,1,0) `padding-block`
+   shorthand at base.css:2311. These longhands at (0,3,0) beat it.
+   row-gap applies because the wrapper carries .layout-panel-flex
+   (snippets/section.liquid:51), which is display:flex (base.css:2385).
+
+   Most of the "dead black space" is not padding, though — section_FJ4UEn holds
+   three EMPTY rte text blocks (text_gC6q9t, text_pkfNTW, text_PUn3Ym). Deleting
+   or disabling those in the editor does more than this CSS can. See HANDOFF §4.6. */
+
+/* ---------------------------------------------------------------------------
+   7. MOBILE POLISH
+   44px minimum hit targets, no accidental horizontal scroll.
+   --------------------------------------------------------------------------- */
+@media screen and (max-width: 749px) {
+  /* v1 listed .drawer-toggle and .drawer__close. Both exist ONLY as orphan rules
+     in base.css (2242, 2261) and are emitted by zero Liquid files.
+     Real mobile menu toggle: <summary class="header__icon header__icon--menu
+     header__icon--summary"> (snippets/header-drawer.liquid:57).
+     Real close buttons all carry .close-button — .menu-drawer__close-button
+     (header-drawer.liquid:78), .cart-drawer__close-button
+     (header-actions.liquid:122), .account-drawer__close-button (:64),
+     .facets-drawer__close (blocks/filters.liquid:401). */
+  .header-actions__cart-icon,
+  .header__icon--menu,
+  .close-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* scroll-padding only applies to an actual scroll container, and it is not
+     inherited. .resource-list__carousel is position:relative + container-type
+     only (base.css:3701); the element that scrolls is <slideshow-slides>
+     (base.css:3269, overflow-x: scroll). v1 set this on the wrapper, where it
+     was a no-op. */
+  .resource-list__carousel slideshow-slides {
+    scroll-padding-inline: var(--page-margin, 16px);
+  }
+
+  /* `overflow-x: hidden` on body is a latent bug here. base.css:33 applies
+     `html[scroll-lock] { overflow: hidden }` whenever a drawer or modal opens
+     (header-drawer, cart drawer, search modal, filters, quick-add). Once <html>
+     stops being `visible`, overflow no longer propagates to the viewport, body
+     becomes a real scroll container, and the sticky header
+     (sections/header.liquid:469, enable_sticky_header: "always") re-anchors to
+     the body box — the page can then scroll behind the open drawer.
+     `clip` gives the same overflow suppression without creating a scroll
+     container, so it cannot interact with sticky or scroll-lock. */
+  body {
+    overflow-x: clip;
+  }
+}
+
+/* Note: the .header-actions__cart-icon hit target above is belt-and-braces —
+   .header-actions__action .svg-wrapper is already var(--button-size) =
+   var(--minimum-touch-target) = 44px (theme-styles-variables.liquid:546,599;
+   header-actions.liquid:584). Same for .close-button, already 44×44 at
+   base.css:1759-1764. Both are kept so the guarantee survives a theme update. */

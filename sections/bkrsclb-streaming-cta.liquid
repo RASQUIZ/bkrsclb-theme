@@ -1,0 +1,262 @@
+{% comment %}
+  BKRSCLB Streaming CTA
+  ---------------------------------------------------------------------------
+  Standalone section. Add it in the theme editor (Add section → BKRSCLB
+  Streaming CTA) and drag it between "Classic Collection" and "Now Serving".
+  Nothing else in the theme references it, so removing the section removes it
+  cleanly. No JS, no cart or checkout involvement.
+{% endcomment %}
+
+{%- liquid
+  assign bg = section.settings.background_color
+  assign fg = section.settings.text_color
+  assign accent = section.settings.accent_color
+  assign pill_bg = section.settings.pill_color
+-%}
+
+<style>
+  #bkrs-cta-{{ section.id }} {
+    background: {{ bg }};
+    color: {{ fg }};
+    padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__inner {
+    max-width: var(--page-width, 1600px);
+    margin-inline: auto;
+    padding-inline: var(--page-margin, 40px);
+    display: grid;
+    gap: 48px;
+    align-items: center;
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__title {
+    margin: 0;
+    font-size: {{ section.settings.title_size }}px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    font-weight: 700;
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__body {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 56ch;
+    opacity: 0.86;
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 24px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color 0.25s ease-out, color 0.25s ease-out;
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__btn--accent {
+    background: {{ accent }};
+    color: #ffffff;
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__btn--accent:hover {
+    filter: brightness(0.86);
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__btn--light {
+    background: #ffffff;
+    color: #000000;
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__btn--light:hover {
+    background: #e6e3de;
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__btn--outline {
+    background: transparent;
+    border-color: {{ fg | color_modify: 'alpha', 0.24 }};
+    color: {{ fg }};
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__btn--outline:hover {
+    background: {{ fg | color_modify: 'alpha', 0.08 }};
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__pill {
+    background: {{ pill_bg }};
+    color: #000000;
+    border-radius: 4px;
+    padding: 3px 7px;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  #bkrs-cta-{{ section.id }} .bkrs-cta__fine {
+    margin: 0;
+    font-size: 12px;
+    opacity: 0.56;
+  }
+  @media screen and (min-width: 990px) {
+    #bkrs-cta-{{ section.id }} .bkrs-cta__inner {
+      grid-template-columns: minmax(420px, 1.05fr) auto;
+    }
+    #bkrs-cta-{{ section.id }} .bkrs-cta__title {
+      white-space: nowrap;
+    }
+  }
+  @media screen and (max-width: 989px) {
+    #bkrs-cta-{{ section.id }} .bkrs-cta__inner {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    #bkrs-cta-{{ section.id }} .bkrs-cta__title {
+      font-size: {{ section.settings.title_size | times: 0.72 | round }}px;
+    }
+  }
+</style>
+
+<div id="bkrs-cta-{{ section.id }}" class="bkrs-cta">
+  <div class="bkrs-cta__inner">
+    <div>
+      {%- if section.settings.title != blank -%}
+        <h2 class="bkrs-cta__title">{{ section.settings.title }}</h2>
+      {%- endif -%}
+      {%- if section.settings.body != blank -%}
+        <p class="bkrs-cta__body" style="margin-top: 14px;">{{ section.settings.body }}</p>
+      {%- endif -%}
+    </div>
+
+    <div class="bkrs-cta__actions">
+      <div class="bkrs-cta__row">
+        {%- if section.settings.show_free and section.settings.free_label != blank -%}
+          <a
+            class="bkrs-cta__btn bkrs-cta__btn--accent"
+            href="{{ section.settings.free_url | default: '#' }}"
+            {% if section.settings.open_new_tab %}target="_blank" rel="noopener"{% endif %}
+          >
+            {{ section.settings.free_label }}
+          </a>
+        {%- endif -%}
+
+        {%- if section.settings.show_monthly and section.settings.monthly_label != blank -%}
+          <a
+            class="bkrs-cta__btn bkrs-cta__btn--light"
+            href="{{ section.settings.monthly_url | default: '#' }}"
+            {% if section.settings.open_new_tab %}target="_blank" rel="noopener"{% endif %}
+          >
+            {{ section.settings.monthly_label }}
+          </a>
+        {%- endif -%}
+
+        {%- if section.settings.show_yearly and section.settings.yearly_label != blank -%}
+          <a
+            class="bkrs-cta__btn bkrs-cta__btn--outline"
+            href="{{ section.settings.yearly_url | default: '#' }}"
+            {% if section.settings.open_new_tab %}target="_blank" rel="noopener"{% endif %}
+          >
+            {{ section.settings.yearly_label }}
+            {%- if section.settings.pill_text != blank -%}
+              <span class="bkrs-cta__pill">{{ section.settings.pill_text }}</span>
+            {%- endif -%}
+          </a>
+        {%- endif -%}
+      </div>
+
+      {%- if section.settings.fine_print != blank -%}
+        <p class="bkrs-cta__fine">{{ section.settings.fine_print }}</p>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "BKRSCLB Streaming CTA",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Headline",
+      "default": "The Bakery | Streaming App"
+    },
+    {
+      "type": "textarea",
+      "id": "body",
+      "label": "Body copy",
+      "default": "Unreleased tracks, instrumentals, first access to new music, exclusive member-only albums and more — only available on our platform. Direct acces from the source; no middleman."
+    },
+    { "type": "header", "content": "Free tier" },
+    { "type": "checkbox", "id": "show_free", "label": "Show button", "default": true },
+    { "type": "text", "id": "free_label", "label": "Label", "default": "Listen free" },
+    { "type": "url", "id": "free_url", "label": "Link" },
+    { "type": "header", "content": "Monthly" },
+    { "type": "checkbox", "id": "show_monthly", "label": "Show button", "default": true },
+    { "type": "text", "id": "monthly_label", "label": "Label", "default": "$1.00 / month" },
+    { "type": "url", "id": "monthly_url", "label": "Link" },
+    { "type": "header", "content": "Yearly" },
+    { "type": "checkbox", "id": "show_yearly", "label": "Show button", "default": true },
+    { "type": "text", "id": "yearly_label", "label": "Label", "default": "$9.99 / year" },
+    { "type": "url", "id": "yearly_url", "label": "Link" },
+    { "type": "text", "id": "pill_text", "label": "Badge text", "default": "2 months free" },
+    { "type": "header", "content": "Fine print" },
+    {
+      "type": "text",
+      "id": "fine_print",
+      "label": "Fine print",
+      "default": "$1.00 × 12 = $12.00. A year is $9.99. Cancel anytime."
+    },
+    { "type": "header", "content": "Appearance" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#000000" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#ffffff" },
+    { "type": "color", "id": "accent_color", "label": "Accent (green)", "default": "#208311" },
+    { "type": "color", "id": "pill_color", "label": "Badge", "default": "#f0c86a" },
+    {
+      "type": "range",
+      "id": "title_size",
+      "label": "Headline size",
+      "min": 24,
+      "max": 64,
+      "step": 2,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "checkbox",
+      "id": "open_new_tab",
+      "label": "Open links in a new tab",
+      "default": false
+    },
+    { "type": "header", "content": "Spacing" },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Top padding",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 60
+    }
+  ],
+  "presets": [{ "name": "BKRSCLB Streaming CTA" }]
+}
+{% endschema %}

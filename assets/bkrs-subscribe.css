@@ -46,15 +46,39 @@ a.bkrs-jbtn.bkrs-jbtn--free{color:#ffffff;}
 .bkrs-bar[hidden]{display:none;}
 .bkrs-bar__t{font-size:12.5px; line-height:1.4; color:#9a9a9a;}
 .bkrs-bar__t strong{color:#ffffff; font-weight:700;}
+/* Close affordance, ported verbatim from THE BAKERY's own join-bar X
+   (#bakery-join-close, bkrsclb-streaming/public/assets/player.css:680-688) so
+   the same control reads the same on the store, the streaming app and
+   razfresco.com. Same glyph already (&#10005;), same red, same hover wash,
+   same 30px circle.
+
+   --beta-red in the streaming app is #e0272b; redeclared here rather than
+   imported because this file is deliberately token-free and self-contained.
+
+   Grey (#9a9a9a) had MORE luminance contrast on black — 7.5:1 vs 4.5:1 — but
+   it read as decoration. Red reads as a control. 4.5:1 clears the 3:1 WCAG
+   1.4.11 bar for non-text UI components, which is what an icon button is. */
+.bkrs-bar{--bkrs-beta-red:#e0272b;}
 .bkrs-bar__x{
-  position:absolute; top:50%; right:16px; transform:translateY(-50%);
-  background:none; border:none; color:#9a9a9a; cursor:pointer;
-  font-size:13px; line-height:1; padding:6px;
+  position:absolute; top:50%; right:12px; transform:translateY(-50%);
+  width:30px; height:30px;
+  display:flex; align-items:center; justify-content:center;
+  background:none; border:1px solid transparent; border-radius:50%;
+  color:var(--bkrs-beta-red); cursor:pointer;
+  font-size:14px; line-height:1; font-family:inherit; padding:0;
+  transition:background .15s ease, border-color .15s ease;
 }
-.bkrs-bar__x:hover{color:#ffffff;}
+.bkrs-bar__x:hover,
+.bkrs-bar__x:focus-visible{
+  background:rgba(224,39,43,.14);
+  border-color:var(--bkrs-beta-red);
+  color:var(--bkrs-beta-red);
+}
 @media(max-width:749px){
   .bkrs-bar{gap:10px; padding:10px 44px 10px 16px;}
   .bkrs-bar__t{width:100%; text-align:center;}
+  /* 30px button at right:8px = 38px used, inside the 44px reserved above. */
+  .bkrs-bar__x{right:8px;}
 }
 
 /* ---------- full band, lower on the home page ---------- */
@@ -80,4 +104,33 @@ a.bkrs-jbtn.bkrs-jbtn--free{color:#ffffff;}
   .bkrs-band{padding:34px 18px;}
   .bkrs-band__h{font-size:24px;}
   .bkrs-band__in{gap:22px;}
+}
+
+/* ---------- BKRSCLB mobile overflow fix ----------
+   .bkrs-band__r was `flex:0 0 auto`, i.e. never allowed to shrink. Its content
+   is the three-button row, whose max-content width is 471px, so on any screen
+   narrower than ~510px the column stayed 471px wide and pushed the "2 months
+   free" badge past the right edge of the page. Measured: 471px wide inside a
+   390px viewport, document scrollWidth 489 (99px of horizontal overflow).
+
+   `flex-shrink:1` plus `min-width:0` lets the column narrow to the line box, at
+   which point .bkrs-jbtns (already flex-wrap:wrap) wraps the buttons onto two
+   rows. Verified: the column becomes 354px in a 390px viewport and the document
+   no longer overflows at 320 / 360 / 390 / 430px.
+
+   min-width:0 is the load-bearing half — a flex item defaults to
+   min-width:auto, which refuses to shrink below max-content no matter what
+   flex-shrink says. */
+.bkrs-band__r{
+  flex:0 1 auto;
+  min-width:0;
+  max-width:100%;
+}
+.bkrs-band__in{min-width:0;}
+.bkrs-jbtns{max-width:100%;}
+
+@media(max-width:479px){
+  /* Narrow phones: give each button the full row so labels never truncate. */
+  .bkrs-band__r .bkrs-jbtns{width:100%;}
+  .bkrs-band__r .bkrs-jbtn{flex:1 1 100%; justify-content:center;}
 }
