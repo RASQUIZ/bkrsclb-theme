@@ -103,8 +103,11 @@ RSYNC_ARGS=(-a --delete
 
 if [ "$DRY_RUN" -eq 1 ]; then
   say "DRY RUN — changes that would be applied:"
+  # rsync itemises time-only changes as ..t; git does not track mtime, so
+  # those are noise. Show real content changes, additions and deletions only.
   rsync "${RSYNC_ARGS[@]}" --dry-run --itemize-changes "$TMP"/ "$REPO"/ \
-    | grep -vE '^\.d\.\.t' | head -60
+    | grep -vE '^[<>.]f\\.\\.t' \
+    | grep -vE '^\.d' | head -60
   echo
   say "DRY RUN — no files written, nothing committed."
   exit 0
