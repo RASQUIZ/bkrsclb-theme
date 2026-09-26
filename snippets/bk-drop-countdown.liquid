@@ -41,7 +41,8 @@
 </style>
 <script>
 (function(){
-  var DROP = Date.parse('2026-09-26T16:00:00Z');       /* 12:00 PM EDT */
+  var DROP = Date.parse('2026-09-26T16:00:00Z');       /* 12:00 PM EDT, countdown target */
+  var UNLOCK = Date.parse('2026-09-26T15:59:00Z');     /* 11:59 AM EDT, buying opens */
   var SHOW_UNTIL = Date.parse('2026-10-03T16:00:00Z'); /* banners retire themselves */
   var CONTEXT = {{ bk_context | json }};
   var PRODUCT_ID = {{ product.id | default: 0 | json }};
@@ -49,7 +50,7 @@
   var LOCKED = {"66719268143219":1,"66719268175987":1,"66719268208755":1,"66719268241523":1,"66719268274291":1,"66719239831667":1,"66719239864435":1,"66719239897203":1,"66719239929971":1,"66719239962739":1,"66719268733043":1,"66719268765811":1,"66719268798579":1,"66719268831347":1,"66719268864115":1,"66719268896883":1,"66719268929651":1,"66719268962419":1,"66719240355955":1,"66719240388723":1,"66719240421491":1,"66719240454259":1,"66719240487027":1,"66719240519795":1,"66719240552563":1,"66719240585331":1,"66719241207923":1,"66719241240691":1,"66719241273459":1,"66719241306227":1,"66719241338995":1};
   var MSG = 'Boulangerie Deux drops today at 12PM EST';
   function now(){ return Date.now(); }
-  function locked(){ return now() < DROP; }
+  function locked(){ return now() < UNLOCK; }
   if (now() > SHOW_UNTIL) return;
 
   /* ---------- lock: fetch / XHR / form submit ---------- */
