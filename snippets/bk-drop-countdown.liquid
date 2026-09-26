@@ -1,0 +1,184 @@
+{%- comment -%}
+  BKRSCLB drop countdown + add-to-cart lock — Boulangerie Deux, Sat Sep 26 2026 12:00 PM EDT.
+  Rendered from layout/theme.liquid just before </body>.
+  - Before drop: countdown on NOW SERVING + the drop's product pages, slim bar site-wide,
+    add to cart / quick add / Shop Pay blocked for the drop's variants.
+  - After drop: lock turns itself off, banners switch to OUT NOW, everything hides after SHOW_UNTIL.
+  Client-side lock only: it stops the storefront buttons, not a hand-built /cart/add URL.
+  Safe to delete this snippet and its render line after Oct 3.
+{%- endcomment -%}
+{%- liquid
+  assign drop_tag = 'drop-2026-09-26'
+  assign bk_context = 'site'
+  if template.name == 'collection' and collection.handle == 'now-serving'
+    assign bk_context = 'collection'
+  elsif template.name == 'product' and product.tags contains drop_tag
+    assign bk_context = 'product'
+  endif
+-%}
+<style>
+  .bkd{--bkd-ink:#fff;--bkd-bg:#000;--bkd-gold:#F9D82F;--bkd-red:#FD4A27;background:var(--bkd-bg);color:var(--bkd-ink);text-align:center;font-family:inherit;box-sizing:border-box}
+  .bkd *{box-sizing:border-box}
+  .bkd-bar{display:block;padding:10px 16px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;text-decoration:none;color:var(--bkd-ink)}
+  .bkd-bar b{color:var(--bkd-gold);font-variant-numeric:tabular-nums;margin-left:.5em}
+  .bkd-hero{padding:clamp(28px,6vw,56px) 16px clamp(24px,5vw,44px);border-bottom:1px solid #222}
+  .bkd-kicker{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--bkd-gold);font-weight:700;margin:0 0 10px}
+  .bkd-title{font-size:clamp(30px,7vw,64px);line-height:.95;letter-spacing:.02em;text-transform:uppercase;font-weight:800;margin:0}
+  .bkd-sub{margin:12px 0 0;font-size:14px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+  .bkd-clock{display:flex;justify-content:center;gap:clamp(8px,2.5vw,20px);margin:clamp(20px,4vw,32px) 0 0}
+  .bkd-unit{min-width:clamp(64px,17vw,110px);padding:clamp(10px,2vw,16px) 6px;border:1px solid #333;border-radius:4px}
+  .bkd-num{display:block;font-size:clamp(30px,8vw,64px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .bkd-lbl{display:block;margin-top:8px;font-size:11px;letter-spacing:.24em;text-transform:uppercase;opacity:.7}
+  .bkd-live .bkd-clock{display:none}
+  .bkd-cta{display:none;margin-top:22px;padding:14px 28px;background:var(--bkd-gold);color:#000;font-weight:800;letter-spacing:.16em;text-transform:uppercase;text-decoration:none;font-size:14px}
+  .bkd-live .bkd-cta{display:inline-block}
+  .bkd-live .bkd-kicker{color:var(--bkd-red)}
+  html.bkd-locked-page .shopify-payment-button,
+  html.bkd-locked-page accelerated-checkout-block,
+  html.bkd-locked-page .accelerated-checkout-block,
+  html.bkd-locked-page .sticky-add-to-cart{display:none!important}
+  html.bkd-locked-page .add-to-cart-button[disabled]{opacity:1!important;cursor:not-allowed}
+</style>
+<script>
+(function(){
+  var DROP = Date.parse('2026-09-26T16:00:00Z');       /* 12:00 PM EDT */
+  var SHOW_UNTIL = Date.parse('2026-10-03T16:00:00Z'); /* banners retire themselves */
+  var CONTEXT = {{ bk_context | json }};
+  var PRODUCT_ID = {{ product.id | default: 0 | json }};
+  var COLLECTION_URL = '/collections/now-serving';
+  var LOCKED = {"66719268143219":1,"66719268175987":1,"66719268208755":1,"66719268241523":1,"66719268274291":1,"66719239831667":1,"66719239864435":1,"66719239897203":1,"66719239929971":1,"66719239962739":1,"66719268733043":1,"66719268765811":1,"66719268798579":1,"66719268831347":1,"66719268864115":1,"66719268896883":1,"66719268929651":1,"66719268962419":1,"66719240355955":1,"66719240388723":1,"66719240421491":1,"66719240454259":1,"66719240487027":1,"66719240519795":1,"66719240552563":1,"66719240585331":1,"66719241207923":1,"66719241240691":1,"66719241273459":1,"66719241306227":1,"66719241338995":1};
+  var MSG = 'Boulangerie Deux drops today at 12PM EST';
+  function now(){ return Date.now(); }
+  function locked(){ return now() < DROP; }
+  if (now() > SHOW_UNTIL) return;
+
+  /* ---------- lock: fetch / XHR / form submit ---------- */
+  function bodyHasLocked(body){
+    if (!body || !locked()) return false;
+    try {
+      if (typeof FormData !== 'undefined' && body instanceof FormData){
+        var ids = body.getAll('id').concat(body.getAll('items[][id]'), body.getAll('items[0][id]'));
+        for (var i=0;i<ids.length;i++) if (LOCKED[String(ids[i])]) return true;
+        return false;
+      }
+      var s = typeof body === 'string' ? body : (body instanceof URLSearchParams ? body.toString() : '');
+      for (var k in LOCKED) if (s.indexOf(k) !== -1) return true;
+    } catch(e){}
+    return false;
+  }
+  function isAdd(url){ return /\/cart\/add(\.js)?(\?|$)/.test(String(url && url.url ? url.url : url)); }
+  var _fetch = window.fetch;
+  if (_fetch){
+    window.fetch = function(input, init){
+      if (isAdd(input) && init && bodyHasLocked(init.body)){
+        var payload = JSON.stringify({status:422, message:MSG, description:MSG});
+        return Promise.resolve(new Response(payload, {status:422, headers:{'Content-Type':'application/json'}}));
+      }
+      return _fetch.apply(this, arguments);
+    };
+  }
+  var _open = XMLHttpRequest.prototype.open, _send = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.open = function(m,u){ this.__bkdAdd = isAdd(u); return _open.apply(this, arguments); };
+  XMLHttpRequest.prototype.send = function(b){
+    if (this.__bkdAdd && bodyHasLocked(b)){ var x=this; setTimeout(function(){ x.abort(); },0); return; }
+    return _send.apply(this, arguments);
+  };
+  document.addEventListener('submit', function(e){
+    var f = e.target;
+    if (!locked() || !f || !f.action || !isAdd(f.action)) return;
+    var inp = f.querySelector('[name="id"]');
+    if (inp && LOCKED[String(inp.value)]){ e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+
+  /* ---------- UI ---------- */
+  function pad(n){ return (n<10?'0':'') + n; }
+  function parts(){
+    var t = Math.max(0, DROP - now());
+    return { d: Math.floor(t/864e5), h: Math.floor(t/36e5)%24, m: Math.floor(t/6e4)%60, s: Math.floor(t/1e3)%60 };
+  }
+  function hero(){
+    var el = document.createElement('section');
+    el.className = 'bkd bkd-hero';
+    el.setAttribute('aria-label','Boulangerie Deux drop countdown');
+    el.innerHTML =
+      '<p class="bkd-kicker" data-bkd-kicker>BKRSCLB Clothing Drop</p>' +
+      '<h2 class="bkd-title">Boulangerie Deux</h2>' +
+      '<p class="bkd-sub" data-bkd-sub>Today · 12PM EST</p>' +
+      '<div class="bkd-clock" role="timer" aria-live="off">' +
+        '<div class="bkd-unit"><span class="bkd-num" data-u="h">00</span><span class="bkd-lbl">Hrs</span></div>' +
+        '<div class="bkd-unit"><span class="bkd-num" data-u="m">00</span><span class="bkd-lbl">Min</span></div>' +
+        '<div class="bkd-unit"><span class="bkd-num" data-u="s">00</span><span class="bkd-lbl">Sec</span></div>' +
+      '</div>' +
+      '<a class="bkd-cta" href="' + COLLECTION_URL + '">Shop the drop</a>';
+    return el;
+  }
+  function bar(){
+    var a = document.createElement('a');
+    a.className = 'bkd bkd-bar';
+    a.href = COLLECTION_URL;
+    a.innerHTML = '<span data-bkd-bartext>Boulangerie Deux drops 12PM EST</span><b data-bkd-barclock></b>';
+    return a;
+  }
+  function lockButtons(){
+    if (CONTEXT !== 'product') return;
+    var btns = document.querySelectorAll('product-form-component[data-product-id="' + PRODUCT_ID + '"] .add-to-cart-button, product-form-component[data-product-id="' + PRODUCT_ID + '"] button[name="add"]');
+    for (var i=0;i<btns.length;i++){
+      var b = btns[i];
+      if (locked()){
+        if (!b.hasAttribute('data-bkd')){ b.setAttribute('data-bkd', b.disabled ? 'was-disabled' : '1'); }
+        if (!b.disabled) b.disabled = true;
+        var t = b.querySelector('.add-to-cart-text__content') || b;
+        if (t.getAttribute('data-bkd-text') === null) t.setAttribute('data-bkd-text', t.textContent);
+        if (t.textContent !== 'Drops 12PM EST') t.textContent = 'Drops 12PM EST';
+      } else if (b.hasAttribute('data-bkd')){
+        if (b.getAttribute('data-bkd') !== 'was-disabled') b.disabled = false;
+        var t2 = b.querySelector('[data-bkd-text]') || (b.hasAttribute('data-bkd-text') ? b : null);
+        if (t2){ t2.textContent = t2.getAttribute('data-bkd-text'); t2.removeAttribute('data-bkd-text'); }
+        b.removeAttribute('data-bkd');
+      }
+    }
+  }
+  function mount(){
+    var main = document.getElementById('MainContent');
+    var h = null, b = null;
+    if ((CONTEXT === 'collection' || CONTEXT === 'product') && main){
+      h = hero(); main.insertBefore(h, main.firstChild);
+    } else {
+      b = bar(); document.body.insertBefore(b, document.body.firstChild);
+    }
+    if (CONTEXT === 'product') document.documentElement.classList.add('bkd-locked-page');
+    function tick(){
+      var p = parts(), live = !locked();
+      if (h){
+        if (live){
+          h.classList.add('bkd-live');
+          h.querySelector('[data-bkd-kicker]').textContent = 'Out now';
+          h.querySelector('[data-bkd-sub]').textContent = 'BKRSCLB Clothing';
+          if (CONTEXT === 'collection'){ var c = h.querySelector('.bkd-cta'); if (c) c.style.display = 'none'; }
+        } else {
+          var hh = p.d*24 + p.h;
+          h.querySelector('[data-u="h"]').textContent = pad(hh);
+          h.querySelector('[data-u="m"]').textContent = pad(p.m);
+          h.querySelector('[data-u="s"]').textContent = pad(p.s);
+        }
+      }
+      if (b){
+        if (live){
+          b.querySelector('[data-bkd-bartext]').textContent = 'Boulangerie Deux · Out now';
+          b.querySelector('[data-bkd-barclock]').textContent = 'Shop →';
+        } else {
+          b.querySelector('[data-bkd-barclock]').textContent = pad(p.d*24+p.h) + ':' + pad(p.m) + ':' + pad(p.s);
+        }
+      }
+      if (live) document.documentElement.classList.remove('bkd-locked-page');
+      lockButtons();
+    }
+    tick();
+    setInterval(tick, 1000);
+    if (window.MutationObserver && CONTEXT === 'product' && main){
+      new MutationObserver(function(){ if (locked()) lockButtons(); }).observe(main, {subtree:true, childList:true, attributes:true, attributeFilter:['disabled']});
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
+})();
+</script>

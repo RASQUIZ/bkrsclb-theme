@@ -38,7 +38,9 @@
     {{ content_for_header }}
 
     {%- comment -%} BKRSCLB enhancement layer — must load AFTER content_for_header {%- endcomment -%}
-    {{ 'bkrsclb-enhance.css' | asset_url | stylesheet_tag }}
+    {{ 'bkrsclb-enhance.css' | asset_url | stylesheet_tag }} {%- if collection.handle == 'bakery-selections' -%}
+  <meta name="robots" content="noindex, follow">
+{%- endif -%}
   </head>
 
   <body class="page-width-{{ settings.page_width }} card-hover-effect-{{ settings.card_hover_effect }}">
@@ -118,5 +120,6 @@
     {% endif %}
 
     <script src="{{ 'android-download-banner.js' | asset_url }}" defer></script>
+      {%- render 'bk-drop-countdown' -%}
   </body>
 </html>
