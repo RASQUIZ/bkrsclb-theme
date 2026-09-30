@@ -50,6 +50,13 @@
     assign show = false
   endif
 
+  comment
+    "Join —" prefix to match razfresco.com's bar (30 Sep 2026). Skipped if the
+    label typed in the theme editor already says Join, so it never doubles.
+  endcomment
+  assign lbl_mo_down = section.settings.label_monthly | downcase
+  assign lbl_yr_down = section.settings.label_annual | downcase
+
   assign url_mo = base | append: '/cart/add?id=' | append: vid | append: '&quantity=1&selling_plan=' | append: p_mo | append: '&return_to=/checkout&ref=bkrsclb-bar'
   assign url_yr = base | append: '/cart/add?id=' | append: vid | append: '&quantity=1&selling_plan=' | append: p_yr | append: '&return_to=/checkout&ref=bkrsclb-bar'
 -%}
@@ -61,8 +68,8 @@
     {%- if section.settings.free_url != blank -%}
       <a class="bkrs-jbtn bkrs-jbtn--free bkrs-jbtn--compact" href="{{ section.settings.free_url }}" target="_blank" rel="noopener">{{ section.settings.label_free }}</a>
     {%- endif -%}
-    <a class="bkrs-jbtn bkrs-jbtn--month bkrs-jbtn--compact" href="{{ url_mo }}">{{ section.settings.label_monthly }}</a>
-    <a class="bkrs-jbtn bkrs-jbtn--year bkrs-jbtn--compact" href="{{ url_yr }}">{{ section.settings.label_annual }}{% if section.settings.badge != blank %} <span class="bkrs-badge">{{ section.settings.badge }}</span>{% endif %}</a>
+    <a class="bkrs-jbtn bkrs-jbtn--month bkrs-jbtn--compact" href="{{ url_mo }}">{% unless lbl_mo_down contains 'join' %}Join &mdash; {% endunless %}{{ section.settings.label_monthly }}</a>
+    <a class="bkrs-jbtn bkrs-jbtn--year bkrs-jbtn--compact" href="{{ url_yr }}">{% unless lbl_yr_down contains 'join' %}Join &mdash; {% endunless %}{{ section.settings.label_annual }}{% if section.settings.badge != blank %} <span class="bkrs-badge">{{ section.settings.badge }}</span>{% endif %}</a>
   </span>
   <button class="bkrs-bar__x" type="button" data-bkrs-bar-close aria-label="Dismiss">&#10005;</button>
 </div>

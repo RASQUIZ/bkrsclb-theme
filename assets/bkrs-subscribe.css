@@ -142,3 +142,48 @@ a.bkrs-jbtn.bkrs-jbtn--free{color:#ffffff;}
 
 /* Fine print under the external-checkout buttons on a product page. */
 .bkrs-ext-fine{margin:10px 0 0;font-size:13px;opacity:.7}
+
+/* ---------- Bar restyle, 30 Sep 2026 ----------
+   Raz: make the bkrsclb.com bar match razfresco.com's dark bar ("cleaner").
+   Ported from rf-subscribe.css (.rf-bar--dark + .rf-jbtn--compact + .rf-badge):
+   white bold message, square-cornered buttons, "JOIN —" labels (added in
+   bkrs-join-bar.liquid), a bigger gold badge, hairline top/bottom borders and
+   the grey boxed X instead of the red circle. Scoped to .bkrs-bar so the band
+   lower on the home page and the product-page buttons are untouched.
+   Specificity (0,3,1) beats the base a.bkrs-jbtn.bkrs-jbtn--* (0,2,1) rules. */
+.bkrs-bar{
+  gap:18px; padding:12px 56px 12px 24px; font-size:13px;
+  border-top:1px solid #2b2b2b; border-bottom:1px solid #2b2b2b;
+}
+.bkrs-bar .bkrs-bar__t{font-size:13px; color:#ffffff; font-weight:600; letter-spacing:.01em;}
+.bkrs-bar .bkrs-jbtns{gap:9px;}
+.bkrs-bar a.bkrs-jbtn{
+  gap:10px; padding:9px 16px; border-radius:2px;
+  font-size:11.5px; font-weight:700; letter-spacing:.07em;
+  transition:background .25s ease, border-color .25s ease, color .25s ease;
+}
+.bkrs-bar a.bkrs-jbtn:hover{opacity:1;}
+.bkrs-bar a.bkrs-jbtn.bkrs-jbtn--month{background:#ffffff; color:#000000; border:1px solid #ffffff;}
+.bkrs-bar a.bkrs-jbtn.bkrs-jbtn--month:hover{background:transparent; color:#ffffff;}
+.bkrs-bar a.bkrs-jbtn.bkrs-jbtn--year{background:transparent; color:#ffffff; border:1px solid rgba(255,255,255,.45);}
+.bkrs-bar a.bkrs-jbtn.bkrs-jbtn--year:hover{border-color:#ffffff;}
+.bkrs-bar a.bkrs-jbtn.bkrs-jbtn--free{background:#2e6b45; color:#ffffff; border:1px solid #2e6b45;}
+.bkrs-bar a.bkrs-jbtn.bkrs-jbtn--free:hover{background:#25563a; border-color:#25563a;}
+.bkrs-bar .bkrs-badge{
+  display:inline-block; margin-left:2px; padding:3px 9px; border-radius:3px;
+  background:#f5c518; color:#000000; font-size:11px; font-weight:700;
+  letter-spacing:.08em; line-height:1.4; white-space:nowrap;
+}
+.bkrs-bar .bkrs-bar__x{
+  right:16px; width:26px; height:26px; border-radius:2px;
+  border:1px solid rgba(255,255,255,.2); background:none;
+  color:rgba(255,255,255,.5); font-size:12px;
+}
+.bkrs-bar .bkrs-bar__x:hover,
+.bkrs-bar .bkrs-bar__x:focus-visible{color:#ffffff; border-color:rgba(255,255,255,.5); background:none;}
+@media(max-width:749px){
+  .bkrs-bar{gap:10px; padding:12px 48px 12px 16px; font-size:12px; text-align:center;}
+  .bkrs-bar .bkrs-bar__t{font-size:12px;}
+  .bkrs-bar .bkrs-jbtns{justify-content:center;}
+  .bkrs-bar .bkrs-bar__x{right:12px;}
+}
