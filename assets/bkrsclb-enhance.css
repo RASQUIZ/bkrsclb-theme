@@ -520,3 +520,75 @@ a[href*='youtube.com'] {
     min-width: 0;
   }
 }
+/* BKRSCLB Sold Out & Archive Styling */
+product-card:has(.product-badges) .price,
+/* ========================================================
+   BKRSCLB - Sold Out & Archive Styling
+   ======================================================== */
+
+/* 1. In-Stock Items: Normal black text, NO line-through */
+product-card:not(:has(.product-badges__badge)) .price,
+.product-card:not(:has(.product-badges__badge)) .price {
+  text-decoration: none !important;
+  opacity: 1 !important;
+}
+
+/* 2. Sold Out items ONLY: Black text crossed out with soft dull red line */
+product-card:has(.product-badges__badge) .price,
+.product-card:has(.product-badges__badge) .price,
+product-card:has(.product-badges__badge) product-price .price {
+  text-decoration: line-through !important;
+  text-decoration-color: #c94a4a !important;
+  text-decoration-thickness: 1.5px !important;
+  color: #111111 !important;
+  opacity: 0.85 !important;
+}
+
+/* 3. Bold / High-Contrast Sold Out Badge */
+.product-badges .product-badges__badge {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  font-family: var(--font-h1--family, "Manteka", sans-serif) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* 4. Image Hover Dimming ONLY for Sold Out items */
+product-card:has(.product-badges__badge):hover .card-gallery img,
+.product-card:has(.product-badges__badge):hover .card-gallery img {
+  filter: grayscale(90%) brightness(0.65) contrast(1.1) !important;
+}
+
+/* 5. "✕ SOLD OUT" Stamp / Overlay ONLY on Sold Out items */
+product-card:has(.product-badges__badge) .card-gallery,
+.product-card:has(.product-badges__badge) .card-gallery {
+  position: relative;
+}
+
+product-card:has(.product-badges__badge) .card-gallery::after,
+.product-card:has(.product-badges__badge) .card-gallery::after {
+  content: "✕ SOLD OUT";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-h1--family, "Manteka", sans-serif);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease-in-out;
+  z-index: 5;
+}
+
+product-card:has(.product-badges__badge):hover .card-gallery::after,
+.product-card:has(.product-badges__badge):hover .card-gallery::after {
+  opacity: 1;
+}

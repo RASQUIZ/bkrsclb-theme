@@ -1,0 +1,92 @@
+{% layout 'theme.app' %}
+{%- comment -%}
+  BKRSCLB — app-only product view. Reached as /products/<handle>?view=app.
+
+  Keeps the stripped flow intact after someone taps a product in the app's
+  merch grid. No site header, no footer, so no route to digital downloads.
+
+  Add to cart posts to Shopify's own /cart/add with return_to=back, which
+  returns here rather than the themed cart page. "Checkout" goes straight
+  to /checkout, skipping the cart template entirely -- Shopify's hosted
+  checkout carries no site navigation, so the door stays shut end to end.
+{%- endcomment -%}
+
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; background:#0a0a0a; color:#fafafa;
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }
+  .ap-wrap { max-width:720px; margin:0 auto; padding:20px 18px 64px; }
+  .ap-back { display:inline-block; margin:0 0 18px; font-size:12.5px; color:#8d8a84;
+             text-decoration:none; letter-spacing:.04em; }
+  .ap-back:hover { color:#fafafa; }
+  .ap-media { background:#141414; border-radius:8px; overflow:hidden; margin:0 0 20px; }
+  .ap-media img { width:100%; height:auto; display:block; }
+  .ap-title { margin:0 0 6px; font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .ap-price { margin:0 0 20px; font-size:17px; color:#c7c4bd; font-variant-numeric:tabular-nums; }
+  .ap-field { display:block; margin:0 0 14px; }
+  .ap-label { display:block; margin:0 0 6px; font-size:11px; letter-spacing:.12em;
+              text-transform:uppercase; color:#8d8a84; }
+  .ap-select { width:100%; padding:12px 14px; background:#141414; color:#fafafa;
+               border:1px solid #2c2c2c; border-radius:6px; font-size:15px;
+               font-family:inherit; }
+  .ap-btn { width:100%; padding:15px 18px; border:0; border-radius:999px;
+            background:#fafafa; color:#0a0a0a; font-size:14px; font-weight:800;
+            letter-spacing:.06em; text-transform:uppercase; cursor:pointer;
+            font-family:inherit; }
+  .ap-btn[disabled] { background:#2c2c2c; color:#7a7770; cursor:default; }
+  .ap-checkout { display:block; margin:12px 0 0; padding:13px 18px; border-radius:999px;
+                 border:1px solid #2c2c2c; color:#fafafa; text-align:center;
+                 text-decoration:none; font-size:13px; font-weight:700;
+                 letter-spacing:.06em; text-transform:uppercase; }
+  .ap-desc { margin:28px 0 0; font-size:14.5px; line-height:1.65; color:#c7c4bd; }
+  .ap-desc img { max-width:100%; height:auto; }
+</style>
+
+<div class="ap-wrap">
+  <a class="ap-back" href="/collections/bakery-selections?view=app">&larr; Back to BAKERY SELECTIONS</a>
+
+  {%- if product.featured_image -%}
+    <div class="ap-media">
+      <img src="{{ product.featured_image | image_url: width: 1200 }}"
+           alt="{{ product.featured_image.alt | escape }}" loading="eager">
+    </div>
+  {%- endif -%}
+
+  <h1 class="ap-title">{{ product.title }}</h1>
+  <p class="ap-price">{{ product.price | money }}</p>
+
+  <form method="post" action="/cart/add" accept-charset="UTF-8" enctype="multipart/form-data">
+    <input type="hidden" name="form_type" value="product">
+    <input type="hidden" name="utf8" value="✓">
+    <input type="hidden" name="return_to" value="back">
+
+    {%- if product.variants.size > 1 -%}
+      <label class="ap-field">
+        <span class="ap-label">Select</span>
+        <select class="ap-select" name="id">
+          {%- for variant in product.variants -%}
+            <option value="{{ variant.id }}"{% unless variant.available %} disabled{% endunless %}>
+              {{ variant.title }} — {{ variant.price | money }}{% unless variant.available %} (sold out){% endunless %}
+            </option>
+          {%- endfor -%}
+        </select>
+      </label>
+    {%- else -%}
+      <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+    {%- endif -%}
+
+    {%- if product.available -%}
+      <button class="ap-btn" type="submit">Add to cart</button>
+    {%- else -%}
+      <button class="ap-btn" type="button" disabled>Sold out</button>
+    {%- endif -%}
+  </form>
+
+  {%- if cart.item_count > 0 -%}
+    <a class="ap-checkout" href="/checkout">Checkout — {{ cart.item_count }} item{% if cart.item_count > 1 %}s{% endif %}</a>
+  {%- endif -%}
+
+  {%- if product.description != blank -%}
+    <div class="ap-desc">{{ product.description }}</div>
+  {%- endif -%}
+</div>

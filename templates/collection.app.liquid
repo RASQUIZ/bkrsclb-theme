@@ -1,0 +1,51 @@
+{% layout 'theme.app' %}
+{%- comment -%}
+  BKRSCLB — app-only collection view, reached as /collections/<handle>?view=app.
+  The website is unaffected: without ?view=app the normal themed page renders.
+  theme.app drops the site header and footer, so there is no route from here
+  to digital downloads. Product links stay inside the ?view=app flow.
+{%- endcomment -%}
+
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; background:#0a0a0a; color:#fafafa;
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }
+  .ac-wrap { max-width:1100px; margin:0 auto; padding:28px 18px 64px; }
+  .ac-head { margin:0 0 6px; font-size:26px; font-weight:800; letter-spacing:-.01em; }
+  .ac-sub  { margin:0 0 26px; font-size:14px; color:#8d8a84; }
+  .ac-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:18px; }
+  .ac-card { display:block; text-decoration:none; color:inherit; min-width:0; }
+  .ac-card__media { position:relative; aspect-ratio:4/5; display:block; background:#141414;
+                    border-radius:6px; overflow:hidden; }
+  .ac-card__media img { width:100%; height:100%; object-fit:cover; display:block; }
+  .ac-card__out { position:absolute; inset:auto 0 0 0; padding:6px 8px;
+                  background:rgba(10,10,10,.82); font-size:10.5px; font-weight:700;
+                  letter-spacing:.12em; text-transform:uppercase; color:#b9b6b0; }
+  .ac-card__title { display:block; margin:9px 0 2px; min-height:2.7em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:13.5px; line-height:1.35; }
+  .ac-card__price { display:block; font-size:13px; color:#8d8a84;
+                    font-variant-numeric:tabular-nums; }
+</style>
+
+<div class="ac-wrap">
+  <h1 class="ac-head">{{ collection.title }}</h1>
+  <p class="ac-sub">Shipped worldwide from Toronto</p>
+
+  <div class="ac-grid">
+    {%- for product in collection.products -%}
+      <a class="ac-card" href="{{ product.url }}?view=app">
+        <span class="ac-card__media">
+          {%- if product.featured_image -%}
+            <img src="{{ product.featured_image | image_url: width: 600 }}"
+                 alt="{{ product.featured_image.alt | escape }}"
+                 width="600" height="750" loading="lazy">
+          {%- endif -%}
+          {%- unless product.available -%}
+            <span class="ac-card__out">Sold out</span>
+          {%- endunless -%}
+        </span>
+        <span class="ac-card__title">{{ product.title }}</span>
+        <span class="ac-card__price">{{ product.price | money }}</span>
+      </a>
+    {%- endfor -%}
+  </div>
+</div>
