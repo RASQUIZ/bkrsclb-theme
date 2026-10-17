@@ -26,6 +26,7 @@
 <header-actions
   {{- block.shopify_attributes -}}
 >
+  {% render 'cakeman-link' %}
   {% if shop.customer_accounts_enabled %}
     <script
       src="{{ 'dialog.js' | asset_url }}"
