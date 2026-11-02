@@ -592,3 +592,30 @@ product-card:has(.product-badges__badge):hover .card-gallery::after,
 .product-card:has(.product-badges__badge):hover .card-gallery::after {
   opacity: 1;
 }
+
+/* ---------------------------------------------------------------------------
+   /pages/join on desktop (Raz, 2026-11-02): the join card was built for phones
+   and showed as a narrow 460px column on a Mac. From 900px up it widens to a
+   1080px card with the three plans side by side. Phones are untouched.
+   The page's own <style> (in the page content) sets the mobile look; these
+   rules win on specificity ("main .bkj…" beats ".bkj…"), not source order.
+   The page section is a 3-column grid with a 672px middle track, so the
+   content wrapper is stretched across all three tracks for this page only.
+   --------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+  .section.page-width-content:has(.bkj) > .section-content-wrapper { grid-column: 1 / -1; width: 100%; max-width: 1120px; margin-inline: auto; padding-inline: 24px; }
+  main .bkj { max-width: 1080px; padding: 60px 64px 48px; border-radius: 24px; text-align: center; }
+  main .bkj-brand { font-size: 14px; margin-bottom: 18px; }
+  main .bkj-h { font-size: 68px; }
+  main .bkj-h small { font-size: 20px; margin-bottom: 12px; }
+  main .bkj-lede { max-width: 620px; margin: 22px auto 40px; font-size: 17px; }
+  main .bkj-plans { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; text-align: left; }
+  main .bkj-plan { grid-template-columns: 1fr; align-content: start; gap: 10px; padding: 28px 26px 30px; min-height: 200px; border-radius: 18px; transition: transform .15s ease, border-color .15s ease, background .15s ease; }
+  main .bkj-plan:hover { transform: translateY(-3px); }
+  main .bkj-name { font-size: 18px; }
+  main .bkj-price { font-size: 38px; line-height: 1.05; letter-spacing: -.01em; }
+  main .bkj-note { font-size: 14.5px; }
+  main .bkj-profile { margin-top: 34px; font-size: 16px; }
+  main .bkj-fine { max-width: 600px; margin: 12px auto 0; font-size: 13px; }
+  main .bkj-app { max-width: 600px; margin: 40px auto 0; padding-top: 28px; }
+}
